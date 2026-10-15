@@ -17,7 +17,27 @@ function layout(items:Tile[],rect:Rect):Array<{tile:Tile;rect:Rect}>{
  const nodes=sorted.map(tile=>({tile,area:tile.marketCap*scale}));
  const result:Array<{tile:Tile;rect:Rect}>=[];
  const worst=(row:Array<{tile:Tile;area:number}>,side:number)=>{if(!row.length)return Infinity;const sum=row.reduce((s,n)=>s+n.area,0),lo=Math.min(...row.map(n=>n.area)),hi=Math.max(...row.map(n=>n.area));return Math.max(side*side*hi/(sum*sum),(sum*sum)/(side*side*lo))};
- const placeRow=(row:Array<{tile:Tile;area:number}>,box:Rect)=>{const sum=row.reduce((s,n)=>s+n.area,0);if(box.w>=box.h){const stripH=sum/box.w;let x=box.x;row.forEach((n,i)=>{const w=i===row.length-1?box.x+box.w-x:n.area/stripH;result.push({tile:n.tile,rect:{x,y:box.y,w,h:stripH}});x+=w});return {x:box.x,y:box.y+stripH,w:box.w,h:Math.max(0,box.h-stripH)}}const stripW=sum/box.h;let y=box.y;row.forEach((n,i)=>{const h=i===row.length-1?box.y+box.h-y:n.area/stripW;result.push({tile:n.tile,rect:{x:box.x,y,w:stripW,h}});y+=h});return {x:box.x+stripW,y:box.y,w:Math.max(0,box.w-stripW),h:box.h}}};
+ const placeRow = (row: Array<{ tile: Tile; area: number }>, box: Rect): Rect => {
+  const sum = row.reduce((acc, node) => acc + node.area, 0);
+  if (box.w >= box.h) {
+   const stripH = sum / box.w;
+   let x = box.x;
+   row.forEach((node, i) => {
+    const w = i === row.length - 1 ? box.x + box.w - x : node.area / stripH;
+    result.push({ tile: node.tile, rect: { x, y: box.y, w, h: stripH } });
+    x += w;
+   });
+   return { x: box.x, y: box.y + stripH, w: box.w, h: Math.max(0, box.h - stripH) };
+  }
+  const stripW = sum / box.h;
+  let y = box.y;
+  row.forEach((node, i) => {
+   const h = i === row.length - 1 ? box.y + box.h - y : node.area / stripW;
+   result.push({ tile: node.tile, rect: { x: box.x, y, w: stripW, h } });
+   y += h;
+  });
+  return { x: box.x + stripW, y: box.y, w: Math.max(0, box.w - stripW), h: box.h };
+ };
  let remaining={...rect};let row:Array<{tile:Tile;area:number}>=[];
  while(nodes.length){const next=nodes[0],side=Math.min(remaining.w,remaining.h);if(!row.length||worst([...row,next],side)<=worst(row,side)){row.push(nodes.shift()!)}else{remaining=placeRow(row,remaining);row=[]}}
  if(row.length)placeRow(row,remaining);

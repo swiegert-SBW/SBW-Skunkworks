@@ -28,16 +28,15 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
 
   const stats: [string, string][] = [
     ["Ticker", co.ticker],
-    ["Primary ID (CIK)", co.cik],
     ["Price", stock ? `${stock.price.toFixed(2)}` : "n/a"],
     ["Market Cap", mcap ? money(mcap) : "n/a"],
-    ["Annual Revenue", fund?.revenue ? money(fund.revenue.value) : "n/a"],
     ["Open", "N/A"],
     ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
     ["Volume", stock ? stock.volume?.toLocaleString("en-US") : "n/a"],
     ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],
     ["Enterprise Value", "N/A"],
+    ["Annual Revenue", fund?.revenue ? money(fund.revenue.value) : "n/a"],
     ["Float", "N/A"],
     ["Short Interest", "N/A"],
     ["WACC", "N/A"],
@@ -47,7 +46,6 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
     ["Ex-Dividend Date", "N/A"],
     ["Annual Dividend", "N/A"],
     ["Fiscal Year End", subs.fiscalYearEnd ? `${subs.fiscalYearEnd.slice(0, 2)}/${subs.fiscalYearEnd.slice(2)}` : "n/a"],
-    ["CIK", co.cik],
   ];
 
   return (

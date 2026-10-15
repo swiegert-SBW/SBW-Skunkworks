@@ -24,12 +24,23 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   const mcap = stock && fund?.sharesOutstanding ? stock.price * fund.sharesOutstanding : null;
   const recent = subs.filings.recent;
   const k = recent.form.findIndex((f: string) => f === "10-K");
+  const description = await getBusinessDescription(co.cik, subs);
 
   const stats: [string, string][] = [
-    ["Open", "N/A"],\n    ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
+    ["Open", "N/A"],
+    ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
     ["Volume", stock ? stock.volume?.toLocaleString("en-US") : "n/a"],
-    ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],\n    ["Enterprise Value", "N/A"],\n    ["Float", "N/A"],\n    ["Short Interest", "N/A"],\n    ["WACC", "N/A"],\n    ["Beta", "N/A"],\n    ["CUSIP", "N/A"],\n    ["First Trading Date", "N/A"],\n    ["Ex-Dividend Date", "N/A"],\n    ["Annual Dividend", "N/A"],
+    ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],
+    ["Enterprise Value", "N/A"],
+    ["Float", "N/A"],
+    ["Short Interest", "N/A"],
+    ["WACC", "N/A"],
+    ["Beta", "N/A"],
+    ["CUSIP", "N/A"],
+    ["First Trading Date", "N/A"],
+    ["Ex-Dividend Date", "N/A"],
+    ["Annual Dividend", "N/A"],
     ["Fiscal Year End", subs.fiscalYearEnd ? `${subs.fiscalYearEnd.slice(0, 2)}/${subs.fiscalYearEnd.slice(2)}` : "n/a"],
     ["CIK", co.cik],
   ];
@@ -45,6 +56,7 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
         <BusinessDescription description={description} filingUrl={k >= 0 ? `https://www.sec.gov/ix?doc=/Archives/edgar/data/${parseInt(co.cik, 10)}/${recent.accessionNumber[k].replace(/-/g, "")}/${recent.primaryDocument[k]}` : undefined} />
         <h3>Corporate Information</h3>
         <dl>
+          <dt>Company Name</dt><dd>{co.name}</dd>
           <dt>Headquarters</dt>
           <dd>{[a.street1, a.street2].filter(Boolean).join(", ")}<br />{[a.city, a.stateOrCountry, a.zipCode].filter(Boolean).join(", ")}</dd>
           <dt>Exchange</dt><dd>{subs.exchanges?.join(", ") || "n/a"}</dd>

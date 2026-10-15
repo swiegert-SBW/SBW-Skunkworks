@@ -1,4 +1,5 @@
-import { lookupTicker, getSubmissions } from "@/lib/sec";
+import { lookupTicker, getSubmissions, getBusinessDescription } from "@/lib/sec";
+import BusinessDescription from "@/components/BusinessDescription";
 import { getFundamentals } from "@/lib/data";
 import { getChart } from "@/lib/market";
 import { money } from "@/lib/format";
@@ -25,10 +26,10 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   const k = recent.form.findIndex((f: string) => f === "10-K");
 
   const stats: [string, string][] = [
-    ["Previous Close", stock ? `$${stock.prevClose.toFixed(2)}` : "n/a"],
+    ["Open", "N/A"],\n    ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
     ["Volume", stock ? stock.volume?.toLocaleString("en-US") : "n/a"],
-    ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],
+    ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],\n    ["Enterprise Value", "N/A"],\n    ["Float", "N/A"],\n    ["Short Interest", "N/A"],\n    ["WACC", "N/A"],\n    ["Beta", "N/A"],\n    ["CUSIP", "N/A"],\n    ["First Trading Date", "N/A"],\n    ["Ex-Dividend Date", "N/A"],\n    ["Annual Dividend", "N/A"],
     ["Fiscal Year End", subs.fiscalYearEnd ? `${subs.fiscalYearEnd.slice(0, 2)}/${subs.fiscalYearEnd.slice(2)}` : "n/a"],
     ["CIK", co.cik],
   ];

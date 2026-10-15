@@ -22,7 +22,7 @@ export default function Home() {
             <div className="home-quick-links">
               <span>QUICK ACCESS</span>
               <Link href="/news"><strong>Today's top news</strong><small>Company and market headlines</small></Link>
-              <Link href="/markets"><strong>Markets</strong><small>Stock heatmap and market performance</small></Link>
+              <Link href="/markets"><strong>Markets</strong><small>Major market quotes and overview</small></Link>
               <Link href="/watchlist"><strong>Watchlist</strong><small>Your saved stock lists</small></Link>
             </div>
           </div>

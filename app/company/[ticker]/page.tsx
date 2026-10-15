@@ -27,6 +27,8 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   const description = await getBusinessDescription(co.cik, subs);
 
   const stats: [string, string][] = [
+    ["Ticker", co.ticker],
+    ["Primary ID (CIK)", co.cik],
     ["Open", "N/A"],
     ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],

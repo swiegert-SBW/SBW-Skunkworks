@@ -13,6 +13,7 @@ export default function Home() {
         </div>
         <section className="home-orbit" aria-labelledby="lookup-title">
           <div className="orbit-glow" aria-hidden="true" />
+          <img className="home-watermark-logo" src="/sbw-logo.svg" alt="" aria-hidden="true" />
           <div className="home-card">
             <div className="home-eyebrow"><span /> SBW RESEARCH TERMINAL</div>
             <h1 id="lookup-title">Look up a company</h1>

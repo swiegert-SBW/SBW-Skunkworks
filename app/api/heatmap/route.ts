@@ -14,14 +14,57 @@ async function getConstituents(index:string):Promise<string[]>{
  return [];
 }
 
-export async function GET(req:NextRequest){const p=req.nextUrl.searchParams,index=p.get("index")||"sp500",period=["1d","5d","1mo","3mo","1y"].includes(p.get("period")||"")?p.get("period")!:"1d";let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");let sourceNote="";if(["sp500","nasdaq100","russell2000"].includes(index)){try{const live=await getConstituents(index);if(live.length<100)throw Error("Constituent list too short");tickers=live}catch{sourceNote="Live constituent refresh failed; showing fallback symbols, which may be incomplete."}}if(index==="watchlist"){tickers=(p.get("tickers")||"").split(",").map(t=>t.trim().toUpperCase().replace(/\./g,"-")).filter(t=>/^[A-Z0-9^=-]{1,12}$/.test(t)).slice(0,300);if(!tickers.length)return NextResponse.json({tiles:[],updatedAt:new Date().toISOString(),note:"Add stocks to this watchlist first."})}tickers=Array.from(new Set(tickers));
-const quoteMap:Record<string,any>={};
-for(let i=0;i<tickers.length;i+=50){
+
+export async function GET(req: NextRequest) {
+ const p=req.nextUrl.searchParams;
+ const index=p.get("index")||"sp500";
+ const period=["1d","5d","1mo","3mo","1y"].includes(p.get("period")||"")?p.get("period")!:"1d";
+ const offset=Math.max(0,Number.parseInt(p.get("offset")||"0",10)||0);
+ const limit=Math.min(25,Math.max(1,Number.parseInt(p.get("limit")||"25",10)||25));
+ let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");
+ let sourceNote="";
+ if(["sp500","nasdaq100","russell2000"].includes(index)){
+  try {
+   const live=await getConstituents(index);
+   const minimum=index==="russell2000"?1500:index==="sp500"?490:95;
+   if(live.length<minimum)throw Error("Constituent source returned too few symbols");
+   tickers=live;
+  }catch{
+   return NextResponse.json({error:"Could not load the complete index constituent list. Please retry later; an incomplete fallback would be misleading."},{status:503});
+  }
+ }
+ if(index==="watchlist"){
+  tickers=(p.get("tickers")||"").split(",").map(t=>t.trim().toUpperCase().replace(/\\./g,"-")).filter(t=>/^[A-Z0-9^=-]{1,12}$/.test(t)).slice(0,300);
+  if(!tickers.length)return NextResponse.json({tiles:[],total:0,updatedAt:new Date().toISOString(),note:"Add stocks to this watchlist first."});
+ }
+ tickers=Array.from(new Set(tickers));
+ const total=tickers.length;
+ const page=tickers.slice(offset,offset+limit);
+ const quoteMap:Record<string,any>={};
+ // Yahoo's bulk quote endpoint may be blocked. Always retain every constituent,
+ // and fall back to individual chart quotes when bulk data is unavailable.
  try{
-  const symbols=tickers.slice(i,i+50);
-  const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+symbols.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},cache:"no-store"});
-  if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q}
+  const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+page.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),cache:"no-store"});
+  if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q;}
  }catch{}
+ const tiles=await Promise.all(page.map(async ticker=>{
+  const q=quoteMap[ticker],info=INFO[ticker];
+  let d:any=null;
+  try {
+   // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
+   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(8000),cache:"no-store"});
+   if(r.ok)d=(await r.json())?.chart?.result?.[0];
+  }catch{}
+  const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice);
+  const prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose);
+  const closes=(d?.indicators?.quote?.[0]?.close||[]).filter((v:any)=>typeof v==="number"&&Number.isFinite(v));
+  const base=period==="1d"?(prev||price):(closes[0]||price);
+  const hasQuote=Number.isFinite(price)&&price>0&&Number.isFinite(base)&&base>0;
+  const sectorMap:Record<string,string>={"Technology":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Basic Materials":"Materials","Financial Services":"Financials"};
+  const rawSector=String(q?.sector||info?.[1]||"Other");
+  const sector=sectorMap[rawSector]||rawSector;
+  const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
+  return {ticker,name:q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+ }));
+ return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"public, s-maxage=900, stale-while-revalidate=1800"}});
 }
-const result=[];for(let i=0;i<tickers.length;i+=12){const batch=await Promise.all(tickers.slice(i,i+12).map(async ticker=>{try{const q=quoteMap[ticker];let d:any=null;if(!Number.isFinite(Number(q?.regularMarketPrice))){const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+period+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},cache:"no-store"});if(!r.ok)return null;d=(await r.json())?.chart?.result?.[0]}const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice),prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose),closes=(d?.indicators?.quote?.[0]?.close||[]).filter((v:number|null)=>typeof v==="number");if(!Number.isFinite(price))return null;const base=period==="1d"?(prev||price):(closes[0]||price),info=INFO[ticker],rawSector=String(q?.sector||info?.[1]||"Other"),sectorMap:Record<string,string>={"Technology":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Basic Materials":"Materials","Communication Services":"Communication Services","Industrials":"Industrials","Energy":"Energy","Utilities":"Utilities","Real Estate":"Real Estate","Information Technology":"Information Technology","Financial Services":"Financials"};const sector=sectorMap[rawSector]|| (["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"].includes(rawSector)?rawSector:"Other");return {ticker,name:q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,sector,marketCap:Number(q?.marketCap)||info?.[2]||0,change:base?(price/base-1)*100:0,price}}catch{return null}}));result.push(...batch.filter(Boolean));}
-if(!result.length&&index!=="watchlist")return NextResponse.json({error:"Yahoo Finance did not return quotes. Try again later."},{status:503});return NextResponse.json({tiles:result.sort((a:any,b:any)=>b.marketCap-a.marketCap),updatedAt:new Date().toISOString(),note:sourceNote||(index==="watchlist"?"Watchlist heatmap.":index==="russell2000"?"Russell 2000 constituents sourced from iShares IWM holdings.":index==="sp500"?"S&P 500 constituents sourced from Wikipedia.":index==="nasdaq100"?"Nasdaq-100 constituents sourced from Wikipedia.":"")},{headers:{"Cache-Control":"s-maxage=900, stale-while-revalidate=1800"}})}

@@ -22,7 +22,7 @@ const LAST_COMPANY_KEY = "sbw-last-company-ticker";
 export default function TopBar() {
   const pathname = usePathname() || "/";
   const isCompanySnapshot = pathname.startsWith("/company/");
-  const [lastCompanyPath, setLastCompanyPath] = useState("");
+  const [lastCompanyPath, setLastCompanyPath] = useState("/company/AAPL");
 
   useEffect(() => {
     const saved = window.localStorage.getItem(LAST_COMPANY_KEY);
@@ -48,7 +48,7 @@ export default function TopBar() {
       <nav className="mainnav" aria-label="Main">
         {NAV.map((n) => {
           const active = n.href === "/" ? isCompanySnapshot : activeHref === n.href;
-          const href = n.href === "/" && lastCompanyPath ? lastCompanyPath : n.href;
+          const href = n.href === "/" ? lastCompanyPath : n.href;
           return <Link key={n.label} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{n.label}</Link>;
         })}
       </nav>

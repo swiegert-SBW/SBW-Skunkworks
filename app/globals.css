@@ -324,3 +324,23 @@ body:has(.home-stage) .home-stage {
 .home-quick-links>a:hover{border-color:var(--accent);background:rgba(19,44,65,.7);text-decoration:none}
 .home-quick-links strong{font-size:12px}.home-quick-links small{font-size:10px;line-height:1.3;color:var(--muted)}
 @media(max-width:600px){.heatmap-sector-grid{height:calc(100vh - 300px);min-height:420px}.home-quick-links{gap:5px}.home-quick-links>a{padding:8px 5px}.home-quick-links strong{font-size:10px}.home-quick-links small{display:none}}
+
+/* V24: clearer sector boundaries, more square treemap cells, and watchlist quote ticker */
+.heatmap-sector-grid{height:calc(100vh - 215px);min-height:400px;max-height:690px;gap:6px;padding:5px;background:#090b0e}
+.heatmap-sector{border:2px solid #e8edf4;box-shadow:0 0 0 1px rgba(255,255,255,.13);border-radius:2px}
+.heatmap-sector>h2{height:21px;padding:3px 6px;font-size:10px;letter-spacing:.035em;background:#303944;border-bottom:1px solid #f0f3f8;color:#fff}
+.heatmap-sector-tiles{inset:21px 0 0}
+.heatmap-sector .heatmap-tile{border:1px solid rgba(255,255,255,.26)}
+.heatmap-sector .heatmap-tile strong{font-size:clamp(8px,.7vw,13px)}
+.heatmap-sector .heatmap-tile span{font-size:clamp(8px,.58vw,11px)}
+.strip{align-items:stretch;overflow:hidden;min-width:0}
+.watchlist-marquee{flex:1 1 auto;min-width:0;overflow:hidden;position:relative;border-left:1px solid #333b45;display:flex;align-items:stretch}
+.watchlist-marquee-track{display:flex;align-items:stretch;width:max-content;animation:watchlist-ticker-scroll var(--ticker-duration,60s) linear infinite}
+.watchlist-marquee:hover .watchlist-marquee-track{animation-play-state:paused}
+.watchlist-marquee .tick{min-width:120px;padding:4px 12px;border-right:1px solid #262b33}
+.watchlist-marquee .tick-label{font-size:10px;color:#9eb6ce}
+.watchlist-marquee .tick-val{font-size:15px}
+.watchlist-marquee-empty{display:flex;align-items:center;padding:0 14px;color:#7f8b98;font-size:11px;white-space:nowrap}
+@keyframes watchlist-ticker-scroll{from{transform:translateX(100%)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.watchlist-marquee-track{animation:none}}
+@media(max-width:760px){.heatmap-sector-grid{height:auto;max-height:none;min-height:65vh}.heatmap-sector{flex-basis:100%!important;min-height:180px}.watchlist-marquee .tick{min-width:105px;padding:4px 8px}}

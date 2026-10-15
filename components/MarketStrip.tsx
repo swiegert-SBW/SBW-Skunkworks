@@ -1,4 +1,5 @@
 import { getChart } from "@/lib/market";
+import WatchlistTickerMarquee from "@/components/WatchlistTickerMarquee";
 
 const ITEMS = [
   { label: "S&P 500", sym: "^GSPC" }, { label: "Nasdaq Composite", sym: "^IXIC" }, { label: "DJ 30 Industrial Avg", sym: "^DJI" },
@@ -30,6 +31,7 @@ export default async function MarketStrip() {
           </div>
         );
       })}
+      <WatchlistTickerMarquee />
     </div>
   );
 }

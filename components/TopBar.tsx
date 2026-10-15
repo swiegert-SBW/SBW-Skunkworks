@@ -1,12 +1,25 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import SearchBox from "./SearchBox";
 
-const NAV: { label: string; href?: string }[] = [
-  { label: "Today's Top News" }, { label: "Markets" }, { label: "Company/Security", href: "/" }, { label: "Ownership" },
-  { label: "Calendar" }, { label: "Filings" }, { label: "Screening" }, { label: "Watchlist" }, { label: "Industry" }, { label: "Deals" },
+const NAV = [
+  { label: "Today's Top News", href: "/news" },
+  { label: "Markets", href: "/markets" },
+  { label: "Company/Security", href: "/" },
+  { label: "Ownership", href: "/ownership" },
+  { label: "Calendar", href: "/calendar" },
+  { label: "Filings", href: "/filings" },
+  { label: "Screening", href: "/screening" },
+  { label: "Watchlist", href: "/watchlist" },
+  { label: "Industry", href: "/industry" },
+  { label: "Deals", href: "/deals" },
 ];
 
 export default function TopBar() {
+  const pathname = usePathname() || "/";
+  const isCompanySnapshot = pathname.startsWith("/company/");
+  const activeHref = isCompanySnapshot ? "/" : pathname === "/" ? "" : pathname;
   return (
     <header>
       <div className="topbar">
@@ -14,13 +27,10 @@ export default function TopBar() {
         <SearchBox variant="pill" />
       </div>
       <nav className="mainnav" aria-label="Main">
-        {NAV.map((n) =>
-          n.href ? (
-            <Link key={n.label} href={n.href} className="active">{n.label}</Link>
-          ) : (
-            <span key={n.label} className="soon" title="Coming soon">{n.label}</span>
-          )
-        )}
+        {NAV.map((n) => {
+          const active = n.href === "/" ? isCompanySnapshot : activeHref === n.href;
+          return <Link key={n.label} href={n.href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{n.label}</Link>;
+        })}
       </nav>
     </header>
   );

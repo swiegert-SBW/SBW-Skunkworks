@@ -9,7 +9,7 @@ type Constituent={ticker:string;sector:string;name?:string};
 const GICS=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
 function normalizeSector(value:string):string {
  const v=value.trim().replace(/&amp;/g,"&");
- const aliases:Record<string,string>={"Technology":"Information Technology","Information Tech":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Financial Services":"Financials","Basic Materials":"Materials","Telecommunication Services":"Communication Services","Communications":"Communication Services"};
+ const aliases:Record<string,string>={"Technology":"Information Technology","Information Tech":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Financial Services":"Financials","Basic Materials":"Materials","Telecommunication Services":"Communication Services","Communications":"Communication Services","Telecommunications":"Communication Services"};
  return aliases[v]|| (GICS.includes(v)?v:"");
 }
 function cleanCell(cell:string):string{return cell.replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&#160;|&nbsp;/g," ").replace(/\s+/g," ").trim();}
@@ -17,7 +17,7 @@ function csvFields(line:string):string[]{const out:string[]=[];let value="",quot
 async function getConstituents(index:string):Promise<Constituent[]>{
  const headers={"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)"};
  if(index==="sp500"||index==="nasdaq100"){
-  const url=index==="sp500"?"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies":"https://en.wikipedia.org/wiki/Nasdaq-100";
+  const url=index==="sp500"?"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies":"https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies";
   const res=await fetch(url,{headers,cache:"no-store"});
   if(!res.ok)throw Error("Index constituent source unavailable");
   const html=await res.text();
@@ -26,7 +26,7 @@ async function getConstituents(index:string):Promise<Constituent[]>{
   if(!table)throw Error("Constituent table missing");
   const rows=[...table.matchAll(/<tr\b[\s\S]*?<\/tr>/gi)].map(m=>m[0]);
   const headerCells=[...(rows[0]||"").matchAll(/<th\b[^>]*>[\s\S]*?<\/th>/gi)].map(m=>cleanCell(m[0]).toLowerCase());
-  const sectorColumn=headerCells.findIndex(h=>h.includes("gics sector")||h==="sector"||h==="gics");
+  const sectorColumn=headerCells.findIndex(h=>h.includes("gics sector")||h==="sector"||h==="gics"||(index==="nasdaq100"&&h.includes("icb industry")));
   const tickerColumn=headerCells.findIndex(h=>h.includes("symbol")||h==="ticker");
   const nameColumn=headerCells.findIndex(h=>h==="security"||h==="company"||h==="name");
   if(sectorColumn<0)throw Error("Index source does not contain GICS sectors");

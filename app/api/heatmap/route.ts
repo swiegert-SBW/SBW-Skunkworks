@@ -17,7 +17,7 @@ function csvFields(line:string):string[]{const out:string[]=[];let value="",quot
 async function getConstituents(index:string):Promise<Constituent[]>{
  const headers={"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)"};
  if(index==="sp500"||index==="nasdaq100"){
-  const url=index==="sp500"?"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies":"https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies";
+  const url=index==="sp500"?"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies":"https://en.wikipedia.org/wiki/Nasdaq-100";
   const res=await fetch(url,{headers,cache:"no-store"});
   if(!res.ok)throw Error("Index constituent source unavailable");
   const html=await res.text();

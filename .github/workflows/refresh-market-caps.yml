@@ -1,6 +1,11 @@
 name: Refresh yfinance market caps
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/refresh_market_caps.py"
+      - ".github/workflows/refresh-market-caps.yml"
   schedule:
     - cron: "15 3 * * 1-5"
 permissions:

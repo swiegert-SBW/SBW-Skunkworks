@@ -74,7 +74,8 @@ export async function GET(req: NextRequest) {
    const live=await getConstituents(index);
    const minimum=index==="russell2000"?1500:index==="sp500"?490:95;
    if(live.length<minimum)throw Error("Constituent source returned too few symbols");
-   tickers=live.map(c=>c.ticker);\n   for(const c of live)sectorsByTicker.set(c.ticker,c);
+   tickers=live.map(c=>c.ticker);
+   for(const c of live)sectorsByTicker.set(c.ticker,c);
   }catch{
    return NextResponse.json({error:"Could not load the complete index constituent list. Please retry later; an incomplete fallback would be misleading."},{status:503});
   }

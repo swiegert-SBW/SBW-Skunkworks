@@ -24,12 +24,15 @@ export default async function StatementView({ cik, ticker, sub, period }: { cik:
     <div className="panel">
       <div className="stmt-head">
         <h2>{data.title}</h2>
-        <div className="toggle">
-          <Link href={`${base}?period=quarterly`} className={period === "quarterly" ? "on" : ""}>Quarterly</Link>
-          <Link href={`${base}?period=annual`} className={period === "annual" ? "on" : ""}>Annual</Link>
+        <div className="stmt-tools">
+          <div className="toggle">
+            <Link href={`${base}?period=quarterly`} className={period === "quarterly" ? "on" : ""}>Quarterly</Link>
+            <Link href={`${base}?period=annual`} className={period === "annual" ? "on" : ""}>Annual</Link>
+          </div>
+          <a className="btn" href={`/api/export/${ticker}/${sub}?period=${period}`}>Download Excel</a>
         </div>
       </div>
-      <p className="muted small">USD in millions, except per share. Click any figure to open the filing it came from. Italic figures are calculated (for example Q4 = full year minus nine months) and link to the later filing.</p>
+      <p className="muted small">USD in millions, except per share. Oldest period is on the left, newest on the right. Click any figure to open the filing it came from. Italic figures are calculated (for example Q4 = full year minus nine months) and link to the later filing.</p>
       <div className="table-wrap">
         <table className="stmt">
           <thead>

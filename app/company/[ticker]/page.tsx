@@ -4,6 +4,9 @@ import { getChart } from "@/lib/market";
 import { money } from "@/lib/format";
 import PerformanceChart from "@/components/PerformanceChart";
 import { notFound } from "next/navigation";
+import type { Chart } from "@/lib/market";
+
+const toSeries = (c: Chart) => ({ t: c.points.map((p) => p.t), c: c.points.map((p) => p.c) });
 
 export default async function Snapshot({ params }: { params: { ticker: string } }) {
   const co = await lookupTicker(params.ticker);
@@ -11,8 +14,8 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   const [subs, fund, stock, spx] = await Promise.all([
     getSubmissions(co.cik),
     getFundamentals(co.cik).catch(() => null),
-    getChart(co.ticker),
-    getChart("^GSPC"),
+    getChart(co.ticker, "5y"),
+    getChart("^GSPC", "5y"),
   ]);
   const a = subs.addresses?.business ?? {};
   const change = stock ? stock.price - stock.prevClose : 0;
@@ -63,7 +66,7 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
         </div>
         <div className="panel">
           <h3>Performance</h3>
-          {stock ? <PerformanceChart stock={stock} index={spx} ticker={co.ticker} /> : <p className="muted">Price data is unavailable right now.</p>}
+          {stock ? <PerformanceChart stock={toSeries(stock)} index={spx ? toSeries(spx) : null} ticker={co.ticker} /> : <p className="muted">Price data is unavailable right now.</p>}
         </div>
         <div className="panel">
           <h3>Key Stats</h3>

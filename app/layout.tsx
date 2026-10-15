@@ -1,12 +1,20 @@
 import "./globals.css";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import TopBar from "@/components/TopBar";
+import MarketStrip from "@/components/MarketStrip";
 
-export const metadata = { title: "FinSight", description: "Company research platform powered by SEC filings" };
+export const metadata = { title: "SBW Workstation", description: "Company research workstation powered by SEC filings" };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <TopBar />
+        <Suspense fallback={<div className="strip" />}>
+          <MarketStrip />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

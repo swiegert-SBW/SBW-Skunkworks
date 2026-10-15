@@ -1,9 +1,11 @@
-# FinSight
+# SBW Workstation
 
 A company research site built on free SEC data. Tabs and subtabs on the left, company pages on the right.
 
 ## What works now
-- Ticker search
+- Ticker search, dark workstation layout with live market strip
+- Statements show oldest period on the left, newest on the right, with a Download Excel button
+- Snapshot chart: date ranges, % axis, hover to see % change
 - Snapshot: company profile, price chart vs S&P 500, key stats
 - Financials: Balance Sheet, Income Statement, Cash Flow (quarterly or annual). Click any figure to open the SEC filing it came from.
 - News, Research, and Filings > Filings: recent SEC filings with links

@@ -12,7 +12,7 @@ export const getStatement = unstable_cache(
     for (const row of st.rows) for (const c of row.cells) if (c) links[c.accn] = filingUrl(cik, c.accn, docs[c.accn]);
     return { ...st, links };
   },
-  ["statement-v1"],
+  ["statement-v2"],
   { revalidate: 3600 }
 );
 

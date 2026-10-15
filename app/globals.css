@@ -258,8 +258,11 @@ body:has(.home-stage) .home-stage {
 .home-watermark-logo {
   position: absolute;
   z-index: 0;
-  width: 76%;
-  height: 76%;
+  width: 96%;
+  height: 96%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   object-fit: contain;
   opacity: .105;
   pointer-events: none;
@@ -267,7 +270,7 @@ body:has(.home-stage) .home-stage {
 }
 .home-card { position: relative; z-index: 1; overflow: hidden; background: radial-gradient(ellipse at 50% 20%, rgba(27,39,54,.66), rgba(13,17,23,.72) 68%); }
 .home-card > *:not(.home-watermark-logo) { position: relative; z-index: 1; }
-.home-card .home-watermark-logo { z-index: 0; width: 82%; height: 82%; opacity: .16; }
+.home-card .home-watermark-logo { z-index: 0; width: 96%; height: 96%; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: .13; }
 @media (max-width: 600px) {
-  .home-watermark-logo { width: 82%; height: 82%; opacity: .09; }
+  .home-watermark-logo { width: 96%; height: 96%; opacity: .11; }
 }

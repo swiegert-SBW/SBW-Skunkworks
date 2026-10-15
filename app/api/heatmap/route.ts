@@ -12,7 +12,7 @@ function normalizeSector(value:string):string {
  const aliases:Record<string,string>={"Technology":"Information Technology","Information Tech":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Financial Services":"Financials","Basic Materials":"Materials","Telecommunication Services":"Communication Services","Communications":"Communication Services"};
  return aliases[v]|| (GICS.includes(v)?v:"");
 }
-function cleanCell(cell:string):string{return cell.replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&#160;|&nbsp;/g," ").replace(/\\s+/g," ").trim();}
+function cleanCell(cell:string):string{return cell.replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&#160;|&nbsp;/g," ").replace(/\s+/g," ").trim();}
 function csvFields(line:string):string[]{const out:string[]=[];let value="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(quoted&&line[i+1]==='"'){value+='"';i++;}else quoted=!quoted;}else if(c===","&&!quoted){out.push(value);value="";}else value+=c;}out.push(value);return out;}
 async function getConstituents(index:string):Promise<Constituent[]>{
  const headers={"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)"};
@@ -21,20 +21,20 @@ async function getConstituents(index:string):Promise<Constituent[]>{
   const res=await fetch(url,{headers,cache:"no-store"});
   if(!res.ok)throw Error("Index constituent source unavailable");
   const html=await res.text();
-  const tables=[...html.matchAll(/<table\\b[\\s\\S]*?<\\/table>/gi)].map(m=>m[0]);
+  const tables=[...html.matchAll(/<table\b[\s\S]*?<\/table>/gi)].map(m=>m[0]);
   const table=index==="sp500"?tables.find(t=>/id=["']constituents["']/.test(t))||tables[0]:tables.find(t=>/GICS Sector|GICS sector|Industry/.test(t))||tables[0];
   if(!table)throw Error("Constituent table missing");
-  const rows=[...table.matchAll(/<tr\\b[\\s\\S]*?<\\/tr>/gi)].map(m=>m[0]);
-  const headerCells=[...(rows[0]||"").matchAll(/<th\\b[^>]*>[\\s\\S]*?<\\/th>/gi)].map(m=>cleanCell(m[0]).toLowerCase());
+  const rows=[...table.matchAll(/<tr\b[\s\S]*?<\/tr>/gi)].map(m=>m[0]);
+  const headerCells=[...(rows[0]||"").matchAll(/<th\b[^>]*>[\s\S]*?<\/th>/gi)].map(m=>cleanCell(m[0]).toLowerCase());
   const sectorColumn=headerCells.findIndex(h=>h.includes("gics sector")||h==="sector"||h==="gics");
   const tickerColumn=headerCells.findIndex(h=>h.includes("symbol")||h==="ticker");
   const nameColumn=headerCells.findIndex(h=>h==="security"||h==="company"||h==="name");
   if(sectorColumn<0)throw Error("Index source does not contain GICS sectors");
   const result:Constituent[]=[];
   for(const row of rows.slice(1)){
-   const cells=[...row.matchAll(/<td\\b[^>]*>[\\s\\S]*?<\\/td>/gi)].map(m=>m[0]);
+   const cells=[...row.matchAll(/<td\b[^>]*>[\s\S]*?<\/td>/gi)].map(m=>m[0]);
    if(cells.length<=sectorColumn)continue;
-   const ticker=cleanCell(cells[tickerColumn<0?0:tickerColumn]).split(/\\s+/)[0].replace(/\\./g,"-");
+   const ticker=cleanCell(cells[tickerColumn<0?0:tickerColumn]).split(/\s+/)[0].replace(/\./g,"-");
    const sector=normalizeSector(cleanCell(cells[sectorColumn]));
    if(/^[A-Z][A-Z0-9-]{0,9}$/.test(ticker)&&sector)result.push({ticker,sector,name:nameColumn>=0?cleanCell(cells[nameColumn]):undefined});
   }
@@ -43,15 +43,15 @@ async function getConstituents(index:string):Promise<Constituent[]>{
  if(index==="russell2000"){
   const res=await fetch("https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund",{headers,cache:"no-store"});
   if(!res.ok)throw Error("Russell constituent source unavailable");
-  const lines=(await res.text()).split(/\\r?\\n/);
-  const start=lines.findIndex(line=>/^\\s*"?Ticker"?,/i.test(line));
+  const lines=(await res.text()).split(/\r?\n/);
+  const start=lines.findIndex(line=>/^\s*"?Ticker"?,/i.test(line));
   if(start<0)throw Error("Russell holdings format changed");
   const header=csvFields(lines[start]).map(v=>v.trim().toLowerCase());
   const tickerCol=header.indexOf("ticker"),sectorCol=header.indexOf("sector"),nameCol=header.indexOf("name");
   if(tickerCol<0||sectorCol<0)throw Error("Russell sector data unavailable");
   const result:Constituent[]=[];
   for(const line of lines.slice(start+1)){
-   const cells=csvFields(line),ticker=(cells[tickerCol]||"").trim().replace(/\\./g,"-"),sector=normalizeSector(cells[sectorCol]||"");
+   const cells=csvFields(line),ticker=(cells[tickerCol]||"").trim().replace(/\./g,"-"),sector=normalizeSector(cells[sectorCol]||"");
    if(/^[A-Z][A-Z0-9-]{0,9}$/.test(ticker)&&sector)result.push({ticker,sector,name:cells[nameCol]});
   }
   return Array.from(new Map(result.map(c=>[c.ticker,c])).values());
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
   }
  }
  if(index==="watchlist"){
-  tickers=(p.get("tickers")||"").split(",").map(t=>t.trim().toUpperCase().replace(/\\./g,"-")).filter(t=>/^[A-Z0-9^=-]{1,12}$/.test(t)).slice(0,300);
+  tickers=(p.get("tickers")||"").split(",").map(t=>t.trim().toUpperCase().replace(/\./g,"-")).filter(t=>/^[A-Z0-9^=-]{1,12}$/.test(t)).slice(0,300);
   if(!tickers.length)return NextResponse.json({tiles:[],total:0,updatedAt:new Date().toISOString(),note:"Add stocks to this watchlist first."});
  }
  tickers=Array.from(new Set(tickers));

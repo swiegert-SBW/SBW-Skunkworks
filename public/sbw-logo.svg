@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+<defs><path id="top" d="M 76,238 A 174,174 0 0 1 424,238"/><path id="bottom" d="M 72,286 A 180,180 0 0 0 428,286"/></defs>
+<g fill="none" stroke="#a79a39" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M250 408 C248 365 251 337 250 308 C248 282 235 264 219 247 M250 347 C269 326 281 305 284 282 M250 324 C232 307 220 290 216 272 M250 290 C261 267 262 247 254 229"/>
+<path d="M219 247 C199 245 189 230 183 215 C163 219 149 206 149 189 C132 180 130 164 141 151 C133 134 143 117 162 115 C168 96 188 91 203 103 C215 87 235 91 245 108 C263 92 285 99 290 117 C309 109 328 121 327 140 C347 147 350 166 336 180 C344 197 329 213 311 211 C301 231 281 240 264 235"/>
+<path d="M250 309 C222 312 201 302 189 284 C169 291 152 279 153 260 C134 251 132 231 148 219 M281 303 C303 305 322 294 328 276 C349 280 366 264 360 246 C379 235 379 215 361 205 M218 272 C197 271 181 258 178 242 M284 282 C305 267 311 251 307 235"/>
+<path d="M190 284 C171 300 168 320 181 334 C175 352 190 366 208 361 C220 378 241 375 250 358 M328 276 C346 291 347 309 334 323 C340 341 326 356 309 351 C297 368 276 365 265 350"/>
+<path d="M237 408 C232 389 230 375 235 360 M263 408 C269 388 270 373 265 350 M250 358 C245 341 247 329 250 309"/>
+<path d="M229 251 l-22 -17 m31 7 -7 -21 m41 20 15 -22 m-49 46 -20 -8 m45 7 20 -11 m-59 43 -18 -10 m48 7 21 -12 m-41 38 -15 -7 m39 3 14 -8"/>
+</g>
+<g fill="#153c5a" font-family="Georgia,serif" text-anchor="middle"><text font-size="24" letter-spacing="1.1"><textPath href="#top" startOffset="50%">Schaper, Benz &amp; Wise</textPath></text><text font-family="Arial,sans-serif" font-weight="700" font-size="14" letter-spacing="1.6"><textPath href="#bottom" startOffset="50%">A TRUSTED ADVISOR FOR GENERATIONS</textPath></text></g>
+</svg>

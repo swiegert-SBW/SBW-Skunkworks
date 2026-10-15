@@ -252,3 +252,21 @@ body:has(.home-stage) .home-stage {
   body:has(.home-stage) .brand { font-size: 22px; }
   body:has(.home-stage) .home-stage { padding: 72px 16px 18px; }
 }
+
+
+/* Transparent firm seal watermark inside the landing-page search circle. */
+.home-watermark-logo {
+  position: absolute;
+  z-index: 0;
+  width: 76%;
+  height: 76%;
+  object-fit: contain;
+  opacity: .105;
+  pointer-events: none;
+  filter: saturate(.85);
+}
+.home-card { position: relative; z-index: 1; background: radial-gradient(ellipse at 50% 20%, rgba(27,39,54,.82), rgba(13,17,23,.84) 68%); }
+.home-card > * { position: relative; z-index: 1; }
+@media (max-width: 600px) {
+  .home-watermark-logo { width: 82%; height: 82%; opacity: .09; }
+}

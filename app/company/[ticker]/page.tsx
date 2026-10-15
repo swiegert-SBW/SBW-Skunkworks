@@ -42,12 +42,7 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
           <dt>Industry (SIC)</dt><dd>{subs.sicDescription || "n/a"}</dd>
         </dl>
         <h3>Business Description</h3>
-        <p className="muted small">
-          Coming next: this will be pulled from Item 1 of the latest 10-K.
-          {k >= 0 && (
-            <> <a href={`https://www.sec.gov/ix?doc=/Archives/edgar/data/${parseInt(co.cik, 10)}/${recent.accessionNumber[k].replace(/-/g, "")}/${recent.primaryDocument[k]}`} target="_blank" rel="noopener noreferrer">Read the latest 10-K</a>.</>
-          )}
-        </p>
+        <BusinessDescription description={description} filingUrl={k >= 0 ? `https://www.sec.gov/ix?doc=/Archives/edgar/data/${parseInt(co.cik, 10)}/${recent.accessionNumber[k].replace(/-/g, "")}/${recent.primaryDocument[k]}` : undefined} />
         <h3>Corporate Information</h3>
         <dl>
           <dt>Headquarters</dt>

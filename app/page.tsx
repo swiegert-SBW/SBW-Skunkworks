@@ -19,9 +19,12 @@ export default function Home() {
             <h1 id="lookup-title">Look up a company</h1>
             <p className="muted">Explore company snapshots, financial statements, and SEC filings.</p>
             <SearchBox variant="large" />
-            <p className="muted small home-examples">
-              QUICK ACCESS&nbsp;&nbsp; <Link href="/company/AAPL">AAPL</Link><span> / </span><Link href="/company/MSFT">MSFT</Link><span> / </span><Link href="/company/NVDA">NVDA</Link>
-            </p>
+            <div className="home-quick-links">
+              <span>QUICK ACCESS</span>
+              <Link href="/news"><strong>Today's top news</strong><small>Company and market headlines</small></Link>
+              <Link href="/markets"><strong>Markets</strong><small>Stock heatmap and market performance</small></Link>
+              <Link href="/watchlist"><strong>Watchlist</strong><small>Your saved stock lists</small></Link>
+            </div>
           </div>
         </section>
       </main>

@@ -14,7 +14,7 @@ export default function Home() {
         <section className="home-orbit" aria-labelledby="lookup-title">
           <div className="orbit-glow" aria-hidden="true" />
           <div className="home-card">
-            <img className="home-watermark-logo" src="/sbw-logo.svg" alt="" aria-hidden="true" />
+            <img className="home-watermark-logo" src="/SBW%20Logo.png" alt="" aria-hidden="true" />
             <div className="home-eyebrow"><span /> SBW RESEARCH TERMINAL</div>
             <h1 id="lookup-title">Look up a company</h1>
             <p className="muted">Explore company snapshots, financial statements, and SEC filings.</p>

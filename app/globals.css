@@ -369,3 +369,12 @@ body:has(.home-stage) .home-stage {
 .strip-ticker-row .watchlist-marquee .tick-chg{font-size:9px}
 .strip-ticker-row .watchlist-marquee .tick-row{gap:5px}
 @media(max-width:1100px){.strip-quote-row{overflow-x:auto;grid-template-columns:repeat(11,minmax(90px,1fr))}}
+
+
+/* Ticker begins on-screen immediately and loops seamlessly over two identical copies. */
+@keyframes watchlist-ticker-scroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+.strip-ticker-row .watchlist-marquee-track{display:flex;width:max-content;min-width:100%;align-items:center;animation:watchlist-ticker-scroll var(--ticker-duration,60s) linear infinite}
+.strip-ticker-row .watchlist-marquee .tick{flex:0 0 210px;width:210px;max-width:210px;height:30px;min-width:0;overflow:hidden;display:flex;flex-direction:row;align-items:center;gap:6px;padding:3px 9px;white-space:nowrap}
+.strip-ticker-row .watchlist-marquee .tick-label,.strip-ticker-row .watchlist-marquee .tick-val,.strip-ticker-row .watchlist-marquee .tick-chg{flex:0 0 auto;line-height:1.1}
+.strip-ticker-row .watchlist-marquee .tick-company{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#8799aa}
+@media(prefers-reduced-motion:reduce){.strip-ticker-row .watchlist-marquee-track{animation:none}}

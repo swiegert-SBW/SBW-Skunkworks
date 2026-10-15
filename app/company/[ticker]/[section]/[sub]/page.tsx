@@ -10,7 +10,7 @@ export default async function SubPage({
   searchParams,
 }: {
   params: { ticker: string; section: string; sub: string };
-  searchParams: { period?: string };
+  searchParams: { period?: string; range?: string };
 }) {
   const co = await lookupTicker(params.ticker);
   if (!co) notFound();
@@ -20,7 +20,7 @@ export default async function SubPage({
 
   if (section.id === "financials" && STATEMENTS[item.id]) {
     const period = searchParams.period === "annual" ? "annual" : "quarterly";
-    return <StatementView cik={co.cik} ticker={co.ticker} sub={item.id} period={period} />;
+    return <StatementView cik={co.cik} ticker={co.ticker} sub={item.id} period={period} range={searchParams.range ?? "all"} />;
   }
   if (section.id === "news" && item.id === "filings") return <FilingsView cik={co.cik} />;
 

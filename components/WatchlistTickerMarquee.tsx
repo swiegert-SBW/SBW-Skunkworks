@@ -26,7 +26,7 @@ export default function WatchlistTickerMarquee(){
     setReady(true);
     const pages=Array.from({length:Math.ceil(symbols.length/25)},(_,i)=>symbols.slice(i*25,(i+1)*25));
     void Promise.all(pages.map(async page=>{
-     const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.symbols.join(","),limit:"25"}));
+     const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.join(","),limit:"25"}));
      if(!response.ok)throw Error("Quote data unavailable");
      const data=await response.json();
      return (data.tiles||[]) as Tile[];

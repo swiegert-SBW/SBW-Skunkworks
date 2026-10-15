@@ -71,7 +71,7 @@ export async function getBusinessDescription(cik: string, subs: any): Promise<st
     const response = await fetch(url, { headers: { "User-Agent": UA }, next: { revalidate: 86400 } });
     if (!response.ok) return null;
     const html = await response.text();
-    const plain = html.replace(/<script[\s\\S]*?<\/script>/gi, " ").replace(/<style[\s\\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ");
+    const plain = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ");
     const start = plain.search(/Item\s+1[.\s]+Business\b/i);
     if (start < 0) return null;
     const rest = plain.slice(start + 10);

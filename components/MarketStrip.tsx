@@ -15,7 +15,7 @@ export default async function MarketStrip() {
         const d = data[i];
         if (!d) return null;
         const chg = d.price - d.prevClose;
-        const pct = (chg / d.prevClose) * 100;
+        const pct = d.prevClose ? (chg / d.prevClose) * 100 : 0;
         const c = chg < 0 ? "neg" : "pos";
         return (
           <div className="tick" key={it.sym}>
@@ -23,7 +23,7 @@ export default async function MarketStrip() {
             <div className="tick-row">
               <span className="tick-val">{f(d.price)}</span>
               <span className={`tick-chg ${c}`}>
-                <span>{chg >= 0 ? "+" : ""}{chg.toFixed(3)}</span>
+                <span>{chg >= 0 ? "+" : ""}{chg.toFixed(2)}</span>
                 <span>({pct >= 0 ? "+" : ""}{pct.toFixed(2)}%)</span>
               </span>
             </div>

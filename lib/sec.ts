@@ -56,3 +56,30 @@ export function docMap(subs: any): Record<string, string> {
   r.accessionNumber.forEach((a: string, i: number) => (out[a] = r.primaryDocument[i]));
   return out;
 }
+
+
+// Best-effort summary from the latest 10-K's Item 1 (Business), using only SEC filings.
+export async function getBusinessDescription(cik: string, subs: any): Promise<string | null> {
+  try {
+    const recent = subs?.filings?.recent;
+    if (!recent) return null;
+    const idx = recent.form.findIndex((form: string, i: number) => form === "10-K" && i < 30);
+    if (idx < 0) return null;
+    const accession = recent.accessionNumber[idx];
+    const document = recent.primaryDocument[idx];
+    const url = `https://www.sec.gov/Archives/edgar/data/${parseInt(cik, 10)}/${accession.replace(/-/g, "")}/${document}`;
+    const response = await fetch(url, { headers: { "User-Agent": UA }, next: { revalidate: 86400 } });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const plain = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ");
+    const start = plain.search(/Item\s+1[.\s]+Business\b/i);
+    if (start < 0) return null;
+    const rest = plain.slice(start + 10);
+    const end = rest.search(/Item\s+1A[.\s]+Risk Factors\b/i);
+    const section = (end > 300 ? rest.slice(0, end) : rest).trim();
+    if (section.length < 100) return null;
+    return section.slice(0, 2200).trim() + (section.length > 2200 ? "…" : "");
+  } catch {
+    return null;
+  }
+}

@@ -226,3 +226,29 @@ table { border-collapse: collapse; width: 100%; }
 
 .description-clamped { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .text-toggle { border: 0; background: none; padding: 2px 0; color: var(--blue); cursor: pointer; font: inherit; font-size: 12px; }
+
+
+/* Minimal landing-page presentation: retain only the brand and centered lookup. */
+body:has(.home-stage) .mainnav,
+body:has(.home-stage) .strip,
+body:has(.home-stage) .topbar .search,
+body:has(.home-stage) .pagebar { display: none !important; }
+body:has(.home-stage) .topbar {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 28px;
+  background: transparent;
+}
+body:has(.home-stage) .brand { font-size: 25px; }
+body:has(.home-stage) .home-stage {
+  min-height: 100vh;
+  padding: 82px 22px 22px;
+}
+@media (max-width: 600px) {
+  body:has(.home-stage) .topbar { padding: 16px 18px; }
+  body:has(.home-stage) .brand { font-size: 22px; }
+  body:has(.home-stage) .home-stage { padding: 72px 16px 18px; }
+}

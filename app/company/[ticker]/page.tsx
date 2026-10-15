@@ -9,8 +9,9 @@ import type { Chart } from "@/lib/market";
 
 const toSeries = (c: Chart) => ({ t: c.points.map((p) => p.t), c: c.points.map((p) => p.c) });
 
-export default async function Snapshot({ params }: { params: { ticker: string } }) {
-  const co = await lookupTicker(params.ticker);
+export default async function Snapshot({ params }: { params: Promise<{ ticker: string }> }) {
+  const { ticker } = await params;
+  const co = await lookupTicker(ticker);
   if (!co) notFound();
   const [subs, fund, stock, spx] = await Promise.all([
     getSubmissions(co.cik),

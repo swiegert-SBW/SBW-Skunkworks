@@ -1,5 +1,5 @@
-// Prices come from Yahoo Finance's public chart endpoint. It is unofficial and can change or block requests,
-// so every call fails softly (returns null) and the page still loads.
+// Market data uses Yahoo Finance's unofficial chart endpoint. Quotes are cached for 15 minutes;
+// actual freshness depends on Yahoo's feed and may be delayed. Fail softly when unavailable.
 export type Chart = {
   price: number;
   prevClose: number;
@@ -20,9 +20,12 @@ export async function getChart(symbol: string, range = "1y"): Promise<Chart | nu
     const points = r.timestamp
       .map((t: number, i: number) => ({ t, c: closes[i] }))
       .filter((p: { t: number; c: number | null }) => p.c != null) as { t: number; c: number }[];
+    const price = r.meta.regularMarketPrice;
+    const prevClose = r.meta.chartPreviousClose ?? r.meta.previousClose ?? (points.length > 1 ? points[points.length - 2].c : price);
+    if (typeof price !== "number" || typeof prevClose !== "number") return null;
     return {
-      price: r.meta.regularMarketPrice,
-      prevClose: points.length > 1 ? points[points.length - 2].c : r.meta.chartPreviousClose,
+      price,
+      prevClose,
       high52: r.meta.fiftyTwoWeekHigh,
       low52: r.meta.fiftyTwoWeekLow,
       volume: r.meta.regularMarketVolume,

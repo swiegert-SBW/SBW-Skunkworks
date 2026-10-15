@@ -8,7 +8,8 @@ const clean=(s:string)=>s.toUpperCase().trim().replace(/[^A-Z0-9.^=-]/g,"").repl
 export default function WatchlistPage(){const[lists,setLists]=useState<Watchlist[]>([]),[ready,setReady]=useState(false),[name,setName]=useState(""),[selected,setSelected]=useState(""),[ticker,setTicker]=useState(""),[query,setQuery]=useState(""),[uploadStatus,setUploadStatus]=useState(""),[uploading,setUploading]=useState(false);
 useEffect(()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))setLists(v)}catch{}setReady(true)},[]);
 useEffect(()=>{if(ready){localStorage.setItem(KEY,JSON.stringify(lists));window.dispatchEvent(new Event("sbw-watchlists-updated"))}},[lists,ready]);
-const current=lists.find(l=>l.id===selected)||lists[0];useEffect(()=>{if(!selected&&lists.length)setSelected(lists[0].id)},[lists,selected]);\nuseEffect(()=>{if(!ready)return;const chosen=lists.find(l=>l.id===selected)||lists[0];if(chosen){localStorage.setItem(SELECTED_KEY,chosen.id);window.dispatchEvent(new Event("sbw-watchlists-updated"))}},[selected,lists,ready]);
+const current=lists.find(l=>l.id===selected)||lists[0];useEffect(()=>{if(!selected&&lists.length)setSelected(lists[0].id)},[lists,selected]);
+useEffect(()=>{if(!ready)return;const chosen=lists.find(l=>l.id===selected)||lists[0];if(chosen){localStorage.setItem(SELECTED_KEY,chosen.id);window.dispatchEvent(new Event("sbw-watchlists-updated"))}},[selected,lists,ready]);
 const addList=()=>{const n=name.trim();if(!n)return;const l={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:n,tickers:[]};setLists(x=>[...x,l]);setSelected(l.id);setName("");setUploadStatus("")};
 const addTicker=()=>{if(!current)return;const t=clean(ticker);if(!t)return;setLists(x=>x.map(l=>l.id===current.id?{...l,tickers:Array.from(new Set([...l.tickers,t]))}:l));setTicker("")};
 const removeTicker=(t:string)=>current&&setLists(x=>x.map(l=>l.id===current.id?{...l,tickers:l.tickers.filter(a=>a!==t)}:l));

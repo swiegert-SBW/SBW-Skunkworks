@@ -264,14 +264,14 @@ body:has(.home-stage) .home-stage {
   top: 50%;
   transform: translate(-50%, -50%);
   object-fit: contain;
-  opacity: .16;
-  mix-blend-mode: normal;
+  opacity: .25;
   pointer-events: none;
   filter: none;
+  mix-blend-mode: normal;
 }
 .home-card { position: relative; z-index: 1; overflow: hidden; background: radial-gradient(ellipse at 50% 20%, rgba(27,39,54,.66), rgba(13,17,23,.72) 68%); }
 .home-card > *:not(.home-watermark-logo) { position: relative; z-index: 1; }
-.home-card .home-watermark-logo { z-index: 0; width: 96%; height: 96%; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: .16; mix-blend-mode: normal; }
+.home-card .home-watermark-logo { z-index: 0; width: 96%; height: 96%; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: .25; mix-blend-mode: normal; }
 @media (max-width: 600px) {
-  .home-watermark-logo { width: 96%; height: 96%; opacity: .14; mix-blend-mode: normal; }
+  .home-watermark-logo { width: 96%; height: 96%; opacity: .25; }
 }

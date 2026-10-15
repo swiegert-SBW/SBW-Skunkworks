@@ -1,3 +1,4 @@
+import marketCaps from "../../../data/market-caps.json";
 import {NextRequest,NextResponse} from "next/server";
 const SP="NVDA MSFT AAPL AMZN GOOGL META AVGO BRK-B LLY JPM TSLA WMT V XOM MA COST ORCL JNJ HD PG NFLX ABBV BAC CRM CVX KO AMD MRK WFC CSCO ACN PEP LIN ADBE MCD TMO IBM GE QCOM TXN INTU CAT AMGN DIS PM VZ NOW UBER ISRG SPGI AXP RTX T BKNG NEE PFE LOW HON UNH COP GS DE BLK PLTR PANW ANET MU KLAC SNPS CDNS CRWD SHOP ADP MDT SYK GILD VRTX TJX NKE F GM UPS NEM FCX EOG SLB DUK SO PLD AMT EQIX C COIN ABNB DASH DELL APH CEG APP ARM";
 const NAS="NVDA MSFT AAPL AMZN GOOGL META AVGO TSLA COST NFLX AMD PEP CSCO ADBE QCOM TXN INTU AMGN ISRG BKNG INTC AMAT MU LRCX KLAC SNPS CDNS PANW CRWD PLTR ADP SBUX GILD VRTX REGN MDLZ ADI MELI ORLY CTAS MAR ABNB DASH FTNT MRVL WDAY TEAM DDOG ZS MDB SHOP PYPL PDD ARM APP COIN HOOD CEG LIN HON CMCSA TMUS VRSK PAYX CPRT FAST PCAR ROST ODFL EA TTD IDXX DXCM EXC XEL KDP CSX ON MCHP NXPI ANSS ILMN BIIB MRNA ALNY GEHC TTWO LULU AEP BKR AZN GFS";
@@ -87,7 +88,8 @@ export async function GET(req: NextRequest) {
  let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");
  let sourceNote="";
  const members=new Map<string,Member>();
- const weights=await getIndexWeights(index);
+ const verifiedCaps:Record<string,number>=marketCaps.caps;
+ const weights=new Map<string,Holding>();
  const totalWeight=[...weights.values()].reduce((sum,h)=>sum+h.weight,0);
  if(["sp500","nasdaq100","russell2000"].includes(index)){
   try {
@@ -131,7 +133,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(member?.sector||q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  return {ticker,name:member?.name||q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,industry:member?.industry||"Other industry",sector:knownSectors.includes(sector)?sector:"Other",marketCap:weights.size>0?(holding?.weight||0.01):(Number(q?.marketCap)||info?.[2]||10000000000),marketCapEstimated:weights.size>0?!holding:!(Number(q?.marketCap)>0||Number(info?.[2])>0),sizeBasis:weights.size>0?(holding?"ETF index weight":"Estimated ETF weight"):Number(q?.marketCap)>0?"Market cap":"Estimate",change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+  return {ticker,name:member?.name||q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,industry:member?.industry||"Other industry",sector:knownSectors.includes(sector)?sector:"Other",marketCap:verifiedCaps[ticker]||0,marketCapEstimated:false,sizeBasis:verifiedCaps[ticker]?"yfinance market cap":"Missing market cap",change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
  }));
- return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,sizeBasis:weights.size?"ETF holdings weight":"Mixed market cap / estimates",totalWeight,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"private, no-store, max-age=0"}});
+ return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,sizeBasis:"yfinance market cap",marketCapUpdatedAt:marketCaps.updatedAt,missingMarketCaps:tiles.filter(t=>!t.marketCap).length,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"private, no-store, max-age=0"}});
 }

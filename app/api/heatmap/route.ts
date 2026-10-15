@@ -10,6 +10,31 @@ const GICS=new Set(["Communication Services","Consumer Discretionary","Consumer 
 function clean(v:string){return v.replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&#160;|&nbsp;/g," ").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n))).replace(/\[[^\]]*\]/g,"").replace(/\s+/g," ").trim();}
 function csv(line:string){const result:string[]=[];let v="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(quoted&&line[i+1]==='"'){v+='"';i++;}else quoted=!quoted;}else if(c===","&&!quoted){result.push(v);v="";}else v+=c;}result.push(v);return result;}
 function normalize(v:string){const a:Record<string,string>={"Technology":"Information Technology","Consumer Cyclical":"Consumer Discretionary","Consumer Defensive":"Consumer Staples","Healthcare":"Health Care","Financial":"Financials","Financial Services":"Financials","Basic Materials":"Materials","Telecommunications":"Communication Services","Telecommunication Services":"Communication Services"};return a[v]||v;}
+type Holding={weight:number;sector:string;name:string};
+async function getIndexWeights(index:string):Promise<Map<string,Holding>>{
+ const urls:Record<string,string>={
+  sp500:"https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf/1467271812596.ajax?fileType=csv&fileName=IVV_holdings&dataType=fund",
+  russell2000:"https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund"
+ };
+ if(!urls[index])return new Map();
+ try{
+  const response=await fetch(urls[index],{headers:{"User-Agent":"Mozilla/5.0"},next:{revalidate:3600}});
+  if(!response.ok)return new Map();
+  const lines=(await response.text()).split(/\r?\n/);
+  const start=lines.findIndex(line=>/^\s*"?Ticker"?,/i.test(line));
+  if(start<0)return new Map();
+  const columns=csv(lines[start]).map(x=>x.toLowerCase().trim());
+  const ti=columns.indexOf("ticker"),wi=columns.indexOf("weight (%)"),si=columns.indexOf("sector"),ni=columns.indexOf("name"),ai=columns.indexOf("asset class");
+  if(ti<0||wi<0)return new Map();
+  const result=new Map<string,Holding>();
+  for(const line of lines.slice(start+1)){
+   const c=csv(line),ticker=(c[ti]||"").trim().replace(/\./g,"-"),weight=Number((c[wi]||"").replace(/,/g,""));
+   if(!/^[A-Z][A-Z0-9-]{0,9}$/.test(ticker)||!(weight>0)||ai>=0&&c[ai]!=="Equity")continue;
+   result.set(ticker,{weight,sector:normalize(c[si]||""),name:c[ni]||ticker});
+  }
+  return result.size>=400?result:new Map();
+ }catch{return new Map();}
+}
 async function getConstituents(index:string):Promise<Member[]>{
  const headers={"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)"};
  if(index==="sp500"||index==="nasdaq100"){
@@ -62,6 +87,8 @@ export async function GET(req: NextRequest) {
  let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");
  let sourceNote="";
  const members=new Map<string,Member>();
+ const weights=await getIndexWeights(index);
+ const totalWeight=[...weights.values()].reduce((sum,h)=>sum+h.weight,0);
  if(["sp500","nasdaq100","russell2000"].includes(index)){
   try {
    const live=await getConstituents(index);
@@ -88,7 +115,7 @@ export async function GET(req: NextRequest) {
   if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q;}
  }catch{}
  const tiles=await Promise.all(page.map(async ticker=>{
-  const q=quoteMap[ticker],info=INFO[ticker],member=members.get(ticker);
+  const q=quoteMap[ticker],info=INFO[ticker],member=members.get(ticker),holding=weights.get(ticker);
   let d:any=null;
   try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
@@ -104,7 +131,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(member?.sector||q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  return {ticker,name:member?.name||q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,industry:member?.industry||"Other industry",sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||10000000000,marketCapEstimated:!(Number(q?.marketCap)>0||Number(info?.[2])>0),change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+  return {ticker,name:member?.name||q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,industry:member?.industry||"Other industry",sector:knownSectors.includes(sector)?sector:"Other",marketCap:holding?.weight||Number(q?.marketCap)||info?.[2]||10000000000,marketCapEstimated:!holding&&!(Number(q?.marketCap)>0||Number(info?.[2])>0),sizeBasis:holding?"ETF index weight":Number(q?.marketCap)>0?"Market cap":"Estimate",change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
  }));
- return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"private, no-store, max-age=0"}});
+ return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,sizeBasis:weights.size?"ETF holdings weight":"Mixed market cap / estimates",totalWeight,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"private, no-store, max-age=0"}});
 }

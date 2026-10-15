@@ -167,7 +167,7 @@ export function buildStatement(facts: any, def: Def, period: Period): Statement 
   // Columns = every period date found for the "anchor" line(s), newest first.
   const found = new Map<string, string>();
   for (const tag of def.anchor) for (const [end, c] of getMap(tag, "usd")) if (!found.has(end)) found.set(end, c.fp);
-  const ends = [...found.keys()].sort();
+  const ends = [...found.keys()].sort().reverse();
   const columns: Column[] = ends.map((end) => ({ end, fp: found.get(end)! })).reverse(); // oldest left, newest right
 
   const rows: Row[] = def.lines.map((line) => {

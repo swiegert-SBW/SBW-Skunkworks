@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
  const offset=Math.max(0,Number.parseInt(p.get("offset")||"0",10)||0);
  const limit=Math.min(25,Math.max(1,Number.parseInt(p.get("limit")||"25",10)||25));
  let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");
- let sourceNote="";\n const sectorsByTicker=new Map<string,Constituent>();
+ let sourceNote="";
+ const sectorsByTicker=new Map<string,Constituent>();
  if(["sp500","nasdaq100","russell2000"].includes(index)){
   try {
    const live=await getConstituents(index);

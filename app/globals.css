@@ -344,3 +344,11 @@ body:has(.home-stage) .home-stage {
 @keyframes watchlist-ticker-scroll{from{transform:translateX(100%)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.watchlist-marquee-track{animation:none}}
 @media(max-width:760px){.heatmap-sector-grid{height:auto;max-height:none;min-height:65vh}.heatmap-sector{flex-basis:100%!important;min-height:180px}.watchlist-marquee .tick{min-width:105px;padding:4px 8px}}
+
+/* V25: ensure watchlist marquee gets the remaining quote-strip width */
+.strip{display:flex;width:100%;min-width:0;overflow:hidden;align-items:stretch}
+.strip>.tick{flex:0 0 auto}
+.watchlist-marquee{display:flex;flex:1 1 0;width:0;min-width:160px;max-width:none;overflow:hidden;position:relative}
+.watchlist-marquee-track{flex:0 0 auto;will-change:transform}
+.watchlist-marquee .tick{flex:0 0 145px;box-sizing:border-box}
+.watchlist-marquee-empty{white-space:normal;min-width:0}

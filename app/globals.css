@@ -352,3 +352,32 @@ body:has(.home-stage) .home-stage {
 .watchlist-marquee-track{flex:0 0 auto;will-change:transform}
 .watchlist-marquee .tick{flex:0 0 145px;box-sizing:border-box}
 .watchlist-marquee-empty{white-space:normal;min-width:0}
+
+
+/* V32: Nested, market-cap-weighted sector / industry / ticker treemap */
+.heatmap-sector-grid{position:relative;display:block;height:calc(100vh - 220px);min-height:520px;max-height:900px;padding:0;gap:0;overflow:hidden;background:#080a0e}
+.heatmap-sector{position:absolute;display:block;min-width:0;min-height:0;flex:none;border:3px solid #e6edf5;box-shadow:inset 0 0 0 1px #111;overflow:hidden}
+.heatmap-sector>h2{height:20px;line-height:15px;font-size:10px;background:#293440;z-index:5}
+.heatmap-sector-tiles{position:absolute;inset:20px 0 0;display:block;padding:0}
+.heatmap-industry{position:absolute;min-width:0;min-height:0;overflow:hidden;border:1.5px solid #a6b4c3;background:#11161b}
+.heatmap-industry>h3{position:absolute;z-index:3;top:0;left:0;right:0;height:15px;line-height:12px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;margin:0;padding:1px 3px;background:rgba(21,29,36,.92);color:#e8edf5}
+.heatmap-industry-tiles{position:absolute;inset:15px 0 0;overflow:hidden}
+.heatmap-industry .heatmap-tile{position:absolute;display:flex;min-width:0;min-height:0;flex:none;align-items:center;justify-content:center;flex-direction:column;gap:2px;padding:1px;overflow:hidden;border:1px solid rgba(255,255,255,.18);color:#fff}
+.heatmap-industry .heatmap-tile strong{font-size:clamp(9px,1.3vw,25px);line-height:1}
+.heatmap-industry .heatmap-tile span{font-size:clamp(8px,.8vw,13px);line-height:1}
+.heatmap-industry .heatmap-tile:hover{z-index:7;outline:2px solid #fff;filter:brightness(1.15)}
+@media(max-width:760px){.heatmap-sector-grid{height:75vh;min-height:500px}.heatmap-sector{min-height:0;flex-basis:auto!important}.heatmap-industry>h3{font-size:8px}}
+
+
+/* V32 refinement: prevent nested rectangle overflow and preserve every tile. */
+.heatmap-sector-grid,.heatmap-sector,.heatmap-sector-tiles,.heatmap-industry,.heatmap-industry-tiles,.heatmap-industry .heatmap-tile{box-sizing:border-box}
+.heatmap-sector-grid{height:calc(100vh - 205px);min-height:560px;max-height:none}
+.heatmap-sector{border:2px solid #f0f3f8}
+.heatmap-sector>h2{height:17px;line-height:13px;padding:2px 4px;font-size:9px}
+.heatmap-sector-tiles{inset:17px 0 0}
+.heatmap-industry{border:1px solid #d6dee8}
+.heatmap-industry>h3{height:12px;line-height:10px;font-size:8px;padding:1px 2px}
+.heatmap-industry-tiles{inset:12px 0 0}
+.heatmap-industry .heatmap-tile{border:1px solid rgba(255,255,255,.2);padding:0;white-space:nowrap}
+.heatmap-industry .heatmap-tile strong{font-size:clamp(8px,1vw,21px)}
+.heatmap-industry .heatmap-tile span{font-size:clamp(8px,.75vw,12px)}

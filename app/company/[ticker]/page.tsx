@@ -51,12 +51,6 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   return (
     <div className="snapshot">
       <aside className="profile panel">
-        <h3>Sector &amp; Industry</h3>
-        <dl>
-          <dt>Industry (SIC)</dt><dd>{subs.sicDescription || "n/a"}</dd>
-        </dl>
-        <h3>Business Description</h3>
-        <BusinessDescription description={description} filingUrl={k >= 0 ? `https://www.sec.gov/ix?doc=/Archives/edgar/data/${parseInt(co.cik, 10)}/${recent.accessionNumber[k].replace(/-/g, "")}/${recent.primaryDocument[k]}` : undefined} />
         <h3>Corporate Information</h3>
         <dl>
           <dt>Company Name</dt><dd>{co.name}</dd>
@@ -66,6 +60,14 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
           <dt>Phone</dt><dd>{subs.phone || "n/a"}</dd>
           <dt>Website</dt><dd>{subs.website ? <a href={subs.website.startsWith("http") ? subs.website : `https://${subs.website}`} target="_blank" rel="noopener noreferrer">Link</a> : "n/a"}</dd>
         </dl>
+        <div className="profile-subsection">
+          <h4>Business Description</h4>
+          <BusinessDescription description={description} filingUrl={k >= 0 ? `https://www.sec.gov/ix?doc=/Archives/edgar/data/${parseInt(co.cik, 10)}/${recent.accessionNumber[k].replace(/-/g, "")}/${recent.primaryDocument[k]}` : undefined} />
+        </div>
+        <div className="profile-subsection">
+          <h4>Sector &amp; Industry</h4>
+          <dl><dt>Industry (SIC)</dt><dd>{subs.sicDescription || "n/a"}</dd></dl>
+        </div>
       </aside>
 
       <div className="main-col">

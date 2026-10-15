@@ -83,19 +83,43 @@ h1 { font-size: 30px; } h2 { font-size: 21px; } h3 { font-size: 16px; }
 }
 .starfield { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
 .shooting-star {
-  position: absolute; width: 130px; height: 1px;
-  background: linear-gradient(90deg, rgba(255,255,255,.95), rgba(123,194,255,.95), transparent);
+  position: absolute; width: 130px; height: 1.5px;
+  opacity: 0;
   filter: drop-shadow(0 0 5px rgba(87,174,255,.8));
-  opacity: 0; transform: rotate(35deg);
-  animation: shooting-star 9s ease-in infinite;
+  animation-duration: 9s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
-.shooting-star-one { top: 20%; left: 10%; animation-delay: 1s; }
-.shooting-star-two { top: 32%; right: 9%; animation-delay: 5.5s; animation-duration: 11s; }
-.shooting-star-three { top: 75%; left: 25%; animation-delay: 8s; animation-duration: 12s; }
-@keyframes shooting-star {
+/* The bright head sits at the leading end; the tail fades behind it. */
+.shooting-star-one {
+  top: 18%; left: 8%;
+  background: linear-gradient(90deg, transparent, rgba(123,194,255,.85), rgba(255,255,255,1));
+  animation-name: shooting-star-down-right; animation-delay: 1s;
+}
+.shooting-star-two {
+  top: 34%; right: 8%;
+  background: linear-gradient(90deg, rgba(255,255,255,1), rgba(123,194,255,.85), transparent);
+  animation-name: shooting-star-down-left; animation-delay: 5.5s; animation-duration: 11s;
+}
+.shooting-star-three {
+  top: 78%; left: 24%;
+  background: linear-gradient(90deg, transparent, rgba(123,194,255,.85), rgba(255,255,255,1));
+  animation-name: shooting-star-up-right; animation-delay: 8s; animation-duration: 12s;
+}
+@keyframes shooting-star-down-right {
   0%, 78%, 100% { opacity: 0; transform: translate3d(0,0,0) rotate(35deg); }
   80% { opacity: .95; }
   88% { opacity: 0; transform: translate3d(210px,130px,0) rotate(35deg); }
+}
+@keyframes shooting-star-down-left {
+  0%, 78%, 100% { opacity: 0; transform: translate3d(0,0,0) rotate(-35deg); }
+  80% { opacity: .95; }
+  88% { opacity: 0; transform: translate3d(-210px,130px,0) rotate(-35deg); }
+}
+@keyframes shooting-star-up-right {
+  0%, 78%, 100% { opacity: 0; transform: translate3d(0,0,0) rotate(-35deg); }
+  80% { opacity: .95; }
+  88% { opacity: 0; transform: translate3d(210px,-130px,0) rotate(-35deg); }
 }
 .home-orbit {
   position: relative; width: min(100%, 590px); aspect-ratio: 1 / 1;

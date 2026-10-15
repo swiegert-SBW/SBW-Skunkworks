@@ -29,6 +29,9 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
   const stats: [string, string][] = [
     ["Ticker", co.ticker],
     ["Primary ID (CIK)", co.cik],
+    ["Price", stock ? `${stock.price.toFixed(2)}` : "n/a"],
+    ["Market Cap", mcap ? money(mcap) : "n/a"],
+    ["Annual Revenue", fund?.revenue ? money(fund.revenue.value) : "n/a"],
     ["Open", "N/A"],
     ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
@@ -68,15 +71,10 @@ export default async function Snapshot({ params }: { params: { ticker: string } 
       </aside>
 
       <div className="main-col">
-        <div className="panel headline">
-          <div><span className="muted small">Price</span><div className="big">{stock ? `$${stock.price.toFixed(2)}` : "n/a"}
-            {stock && <span className={change < 0 ? "neg small" : "pos small"}> {change.toFixed(2)} ({changePct.toFixed(2)}%)</span>}</div></div>
-          <div><span className="muted small">Market Cap</span><div className="big">{mcap ? money(mcap) : "n/a"}</div></div>
-          <div><span className="muted small">Annual Revenue</span><div className="big">{fund?.revenue ? money(fund.revenue.value) : "n/a"}</div></div>
-        </div>
         <div className="panel">
           <h3>Performance</h3>
           {stock ? <PerformanceChart stock={toSeries(stock)} index={spx ? toSeries(spx) : null} ticker={co.ticker} /> : <p className="muted">Price data is unavailable right now.</p>}
+          {stock && <p className={change < 0 ? "neg small" : "pos small"}>Latest change: {change >= 0 ? "+" : ""}{change.toFixed(2)} ({changePct >= 0 ? "+" : ""}{changePct.toFixed(2)}%)</p>}
         </div>
         <div className="panel">
           <h3>Key Stats</h3>

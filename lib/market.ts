@@ -21,7 +21,7 @@ export async function getChart(symbol: string, range = "1y"): Promise<Chart | nu
       .map((t: number, i: number) => ({ t, c: closes[i] }))
       .filter((p: { t: number; c: number | null }) => p.c != null) as { t: number; c: number }[];
     const price = r.meta.regularMarketPrice;
-    const prevClose = r.meta.chartPreviousClose ?? r.meta.previousClose ?? (points.length > 1 ? points[points.length - 2].c : price);
+    const prevClose = r.meta.previousClose ?? (points.length > 1 ? points[points.length - 2].c : r.meta.chartPreviousClose ?? price);
     if (typeof price !== "number" || typeof prevClose !== "number") return null;
     return {
       price,

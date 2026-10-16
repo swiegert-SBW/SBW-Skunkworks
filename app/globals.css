@@ -522,3 +522,11 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .home-orbit-track-two{animation-delay:-6s}
 .home-orbit-track::before{background:conic-gradient(from 90deg,transparent 0deg,transparent 290deg,rgba(148,207,255,.02) 300deg,rgba(187,223,255,.16) 322deg,rgba(229,244,255,.58) 348deg,rgba(255,255,255,.94) 359deg,transparent 360deg)}
 @media(prefers-reduced-motion:reduce){.home-orbit-track,.home-orbit-track-two{animation:none}.home-orbit-track-two{transform:rotate(180deg)}}
+
+/* Benz Bot AI briefing, above the market news article links. */
+.news-benz-bot{border:1px solid #416483;border-radius:8px;background:linear-gradient(135deg,#1c2d40,#151d28 75%);margin:0 0 16px;overflow:hidden;box-shadow:0 6px 24px #0002}
+.news-benz-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 17px;border-bottom:1px solid #354c62}
+.news-benz-brand{display:flex;gap:12px;align-items:center}.news-benz-brand h2{font-size:16px;margin:0;color:#e7f4ff}.news-benz-brand small{display:block;margin-top:3px;color:#a5c2db;font-size:11px}
+.news-benz-mark{display:grid;place-items:center;width:35px;height:35px;border-radius:9px;background:#245b86;color:#d8f3ff;font-size:22px}
+.news-benz-status{font-size:11px;color:#98c7eb;white-space:nowrap}.news-benz-body{padding:16px 19px;color:#e4ebf4;font-size:13px;line-height:1.7}.news-benz-body p{margin:0}
+.news-benz-footer{border-top:1px solid #304253;padding:9px 18px;color:#8ea5b9;font-size:10px}

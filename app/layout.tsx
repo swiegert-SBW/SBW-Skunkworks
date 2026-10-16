@@ -9,10 +9,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <TopBar />
-        <Suspense fallback={<div className="strip" />}>
-          <MarketStrip />
-        </Suspense>
+        <div className="workstation-sticky-header">
+          <TopBar />
+          <Suspense fallback={<div className="strip" />}>
+            <MarketStrip />
+          </Suspense>
+        </div>
         {children}
       </body>
     </html>

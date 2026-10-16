@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
  const tiles:any[]=[];
  for(let start=0;start<page.length;start+=10){
  const chunk=await Promise.all(page.slice(start,start+10).map(async ticker=>{
-  const q=quoteMap[ticker],info=INFO[ticker];
+  const q=quoteMap[ticker]||quoteMap[ticker.replace(/-/g,".")],info=INFO[ticker];
   let d:any=sparkMap[ticker]?.response?.[0]||sparkMap[ticker]?.chart?.result?.[0]||null;
   if(!d&&!q)try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.

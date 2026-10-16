@@ -1,0 +1,21 @@
+# SBW Skunkworks - Render web service
+# Create via Render Dashboard > New > Blueprint, selecting this GitHub repository.
+services:
+  - type: web
+    name: sbw-skunkworks
+    runtime: node
+    plan: free
+    region: ohio
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SEC_USER_AGENT
+        sync: false

@@ -6,7 +6,7 @@ type Watchlist={id:string;name:string;tickers:string[]};
 const KEY="sbw-workstation-watchlists-v1";
 const SELECTED_KEY="sbw-selected-watchlist-id";
 const clean=(s:string)=>s.toUpperCase().trim().replace(/[^A-Z0-9.^=-]/g,"").replace(/\./g,"-");
-export default function WatchlistPage(){[lists,setLists]=useState<Watchlist[]>([]),[ready,setReady]=useState(false),[name,setName]=useState(""),[selected,setSelected]=useState(""),[ticker,setTicker]=useState(""),[query,setQuery]=useState(""),[uploadStatus,setUploadStatus]=useState(""),[uploading,setUploading]=useState(false);
+export default function WatchlistPage(){const [lists,setLists]=useState<Watchlist[]>([]),[ready,setReady]=useState(false),[name,setName]=useState(""),[selected,setSelected]=useState(""),[ticker,setTicker]=useState(""),[query,setQuery]=useState(""),[uploadStatus,setUploadStatus]=useState(""),[uploading,setUploading]=useState(false);
 useEffect(()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))setLists(v)}catch{}setReady(true)},[]);
 useEffect(()=>{if(ready){localStorage.setItem(KEY,JSON.stringify(lists));window.dispatchEvent(new Event("sbw-watchlists-updated"))}},[lists,ready]);
 const current=lists.find(l=>l.id===selected)||lists[0];useEffect(()=>{if(!selected&&lists.length)setSelected(lists[0].id)},[lists,selected]);

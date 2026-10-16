@@ -25,12 +25,12 @@ export default function WatchlistTickerMarquee(){
     setReady(true);
     const cached=previousQuotes.current;
     setTiles(symbols.map(ticker=>cached.get(ticker)).filter((t):t is Tile=>Boolean(t&&t.quoteAvailable&&t.price!==null&&t.name)));
-    const pages=Array.from({length:Math.ceil(symbols.length/25)},(_,i)=>symbols.slice(i*25,(i+1)*25));
+    const pages=Array.from({length:Math.ceil(symbols.length/5)},(_,i)=>symbols.slice(i*5,(i+1)*5));
     void Promise.allSettled(pages.map(async(page,i)=>{
-     if(i)await new Promise(resolve=>window.setTimeout(resolve,i*400));
+     if(i)await new Promise(resolve=>window.setTimeout(resolve,i*350));
      for(let attempt=0;attempt<3;attempt++){
       try{
-       const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.join(","),limit:"25"}),{cache:"no-store"});
+       const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.join(","),limit:"5"}),{cache:"no-store"});
        if(!response.ok)throw Error("Quote data unavailable");
        const data=await response.json();
        if(!live||version!==request)return;
@@ -38,7 +38,8 @@ export default function WatchlistTickerMarquee(){
         if(tile.quoteAvailable&&typeof tile.price==="number"&&Number.isFinite(tile.price)&&tile.name)cached.set(tile.ticker,tile);
        }
        setTiles(symbols.map(ticker=>cached.get(ticker)).filter((t):t is Tile=>Boolean(t&&t.quoteAvailable&&t.price!==null&&t.name)));
-       return;
+       if(((data.tiles||[]) as Tile[]).every(tile=>tile.quoteAvailable))return;
+       if(attempt<2)await new Promise(resolve=>window.setTimeout(resolve,2200));
       }catch{if(attempt<2)await new Promise(resolve=>window.setTimeout(resolve,2500));}
      }
     }));

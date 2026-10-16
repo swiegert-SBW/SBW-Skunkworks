@@ -479,3 +479,7 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .watch-import-button span{font-size:18px;line-height:1}
 .watch-import-native:focus-visible+.watch-import-button{outline:2px solid #89caff;outline-offset:3px}
 .watch-import-button.is-disabled{opacity:.5;cursor:wait}
+
+/* V65: the emoji rocket naturally points diagonally up; rotate it clockwise so its nose follows the shallow rightward flight path. */
+.home-rocket{transform:translate3d(0,0,0) rotate(28deg)}
+@keyframes home-rocket-fly{0%,6%{opacity:0;transform:translate3d(0,0,0) rotate(28deg)}7%{opacity:1}22%{opacity:1;transform:translate3d(calc(100vw + 180px),-210px,0) rotate(28deg)}23%,100%{opacity:0;transform:translate3d(calc(100vw + 180px),-210px,0) rotate(28deg)}}

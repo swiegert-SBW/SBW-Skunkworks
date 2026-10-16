@@ -407,3 +407,5 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-box-header .muted{font-size:10px}
 
 .news-source-filter{position:relative;font-size:12px;flex-shrink:0}.news-source-filter summary{cursor:pointer;border:1px solid #45515d;padding:6px 9px;border-radius:4px;list-style:none;color:#b8e4ff}.news-source-filter summary::-webkit-details-marker{display:none}.news-source-options{position:absolute;z-index:120;right:0;top:calc(100% + 5px);width:205px;max-height:330px;overflow-y:auto;background:#17212c;border:1px solid #45515d;border-radius:5px;box-shadow:0 8px 24px #0009;padding:9px}.news-source-options label{display:flex;align-items:center;gap:8px;padding:5px 2px;cursor:pointer;white-space:nowrap}.news-source-actions{display:flex;justify-content:space-between;padding:0 0 6px}.news-source-actions button{background:none;border:0;color:var(--blue);cursor:pointer}
+
+.news-calendar-detail-link{font-size:12px;color:#9bd6ff;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}.news-calendar-detail-link:hover{color:#fff}

@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
  const total=tickers.length;
  const page=tickers.slice(offset,offset+limit);
  const quoteMap:Record<string,any>={};
- const companyNames=index==="watchlist"?await getCompanyNames():{};
+ const companyNames:Record<string,string>={};
  // Yahoo's bulk quote endpoint may be blocked. Always retain every constituent,
  // and fall back to individual chart quotes when bulk data is unavailable.
  try{
@@ -66,11 +66,11 @@ export async function GET(req: NextRequest) {
   let d:any=null;
   try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
-   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(8000),next:{revalidate:300}});
+   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(4500),next:{revalidate:300}});
    if(r.ok)d=(await r.json())?.chart?.result?.[0];
   }catch{}
   if(!d){
-   try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),cache:"no-store"});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
+   try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(3500),next:{revalidate:300}});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
   }
   const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice);
   const prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose);

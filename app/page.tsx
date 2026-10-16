@@ -14,6 +14,7 @@ export default function Home() {
         </div>
         <section className="home-orbit" aria-labelledby="lookup-title">
           <div className="orbit-glow" aria-hidden="true" />
+          <div className="home-orbit-satellites" aria-hidden="true"><span className="home-orbit-track home-orbit-track-one"><i /></span><span className="home-orbit-track home-orbit-track-two"><i /></span></div>
           <div className="home-card">
             <img className="home-watermark-logo" src="/SBW%20Tree%20Logo.png" alt="" aria-hidden="true" />
             <div className="home-eyebrow"><span /> SBW RESEARCH TERMINAL</div>

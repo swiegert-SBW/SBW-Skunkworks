@@ -506,3 +506,13 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 
 /* V70: exhaust emerges from the rocket engine and points backward along its upward-right trajectory. The rocket wrapper rotates 28deg; the trail counter-rotates 40deg, yielding a 12deg upward-right screen direction. */
 .home-rocket-flame{top:75%;right:calc(100% - 7px);transform:rotate(-40deg);transform-origin:right center}
+
+/* V71: two bright orbital satellites with fading comet arcs around the landing circle. */
+.home-orbit-satellites{position:absolute;inset:-27px;z-index:2;pointer-events:none;border-radius:50%}
+.home-orbit-track{position:absolute;inset:0;border-radius:50%;animation:home-satellite-orbit 10s linear infinite;transform-origin:center}
+.home-orbit-track-two{animation-duration:15s;animation-direction:reverse;animation-delay:-5s}
+.home-orbit-track::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,transparent 0deg,transparent 291deg,rgba(148,207,255,.02) 299deg,rgba(187,223,255,.16) 318deg,rgba(229,244,255,.58) 346deg,rgba(255,255,255,.94) 358deg,transparent 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));filter:drop-shadow(0 0 4px #a5d5ff)}
+.home-orbit-track i{position:absolute;top:50%;right:-3px;width:7px;height:7px;transform:translateY(-50%);border-radius:50%;background:#fff;box-shadow:0 0 6px 2px #e8f7ff,0 0 17px 5px #75b9ff}
+.home-orbit-track-two i{width:6px;height:6px;box-shadow:0 0 5px 2px #fff,0 0 13px 4px #a1c8ff}
+@keyframes home-satellite-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.home-orbit-track{animation:none}.home-orbit-track-two{transform:rotate(180deg)}}

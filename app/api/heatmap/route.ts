@@ -15,6 +15,19 @@ async function getConstituents(index:string):Promise<string[]>{
 }
 
 
+// Company names are fetched independently of the quote service and cached for a day.
+let namesCache: {expires:number; names:Record<string,string>}|null=null;
+async function getCompanyNames():Promise<Record<string,string>>{
+ if(namesCache&&namesCache.expires>Date.now())return namesCache.names;
+ const names:Record<string,string>={};
+ try{
+  const res=await fetch("https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=6000",{headers:{"User-Agent":"Mozilla/5.0","Accept":"application/json","Origin":"https://www.nasdaq.com"},next:{revalidate:86400},signal:AbortSignal.timeout(10000)});
+  if(res.ok){const json=await res.json();for(const row of json?.data?.table?.rows||[]){if(row.symbol&&row.name)names[String(row.symbol).toUpperCase().replace(/\\./g,"-")]=String(row.name);}}
+ }catch{}
+ if(Object.keys(names).length)namesCache={expires:Date.now()+86400000,names};
+ return names;
+}
+
 export async function GET(req: NextRequest) {
  const p=req.nextUrl.searchParams;
  const index=p.get("index")||"sp500";
@@ -41,18 +54,20 @@ export async function GET(req: NextRequest) {
  const total=tickers.length;
  const page=tickers.slice(offset,offset+limit);
  const quoteMap:Record<string,any>={};
+ const companyNames=index==="watchlist"?await getCompanyNames():{};
  // Yahoo's bulk quote endpoint may be blocked. Always retain every constituent,
  // and fall back to individual chart quotes when bulk data is unavailable.
  try{
-  const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+page.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),cache:"no-store"});
+  const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+page.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),next:{revalidate:300}});
   if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q;}
  }catch{}
- const tiles=await Promise.all(page.map(async ticker=>{
+ const tiles=[];
+ for(const ticker of page){
   const q=quoteMap[ticker],info=INFO[ticker];
   let d:any=null;
   try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
-   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(8000),cache:"no-store"});
+   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(8000),next:{revalidate:300}});
    if(r.ok)d=(await r.json())?.chart?.result?.[0];
   }catch{}
   if(!d){
@@ -67,7 +82,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
- }));
+  tiles.push({ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote});
+ }
  return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"public, s-maxage=900, stale-while-revalidate=1800"}});
 }

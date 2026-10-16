@@ -26,7 +26,7 @@ export async function GET(req:NextRequest){
  // Query every symbol in small groups to avoid long, truncated search expressions.
  // Batch requests to keep serverless concurrency reasonable; individual failures do not hide other symbols.
  const names=directory as Record<string,string>;
- const shortName=(t:string)=>String(names[t]||names[t.replace(/-/g,".")]||"").replace(/\\b(Inc\\.?|Corporation|Corp\\.?|Ltd\\.?|Limited|PLC|Co\\.?|Class [A-Z]|Common Stock|Holdings?)\\b/gi," ").replace(/[^a-zA-Z0-9 ]/g," ").replace(/\\s+/g," ").trim();
+ const shortName=(t:string)=>String(names[t]||names[t.replace(/-/g,".")]||"").replace(/\b(Inc\.?|Corporation|Corp\.?|Ltd\.?|Limited|PLC|Co\.?|Class [A-Z]|Common Stock|Holdings?)\b/gi," ").replace(/[^a-zA-Z0-9 ]/g," ").replace(/\s+/g," ").trim();
  const searchTerms=symbols.map(t=>({ticker:t,name:shortName(t)}));
  const batches:typeof searchTerms[]=[];for(let i=0;i<searchTerms.length;i+=4)batches.push(searchTerms.slice(i,i+4));
  const [market,...companyGroups]=await Promise.all([
@@ -54,19 +54,19 @@ export async function GET(req:NextRequest){
  const upcoming:CalendarItem[]=[];
  let calendarSource="Trading Economics public website",calendarStatus="unavailable";
  const clean=(s:string)=>decode(s.replace(/&nbsp;|&#160;/g," ").trim());
- const field=(row:string,part:string)=>{const cells=[...row.matchAll(/<td\\b([^>]*)>([\\s\\S]*?)<\\/td>/gi)];const cell=cells.find(m=>m[1].includes(part));return cell?clean(cell[2]):""};
+ const field=(row:string,part:string)=>{const cells=[...row.matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)];const cell=cells.find(m=>m[1].includes(part));return cell?clean(cell[2]):""};
  try{
   const url="https://tradingeconomics.com/calendar?"+new URLSearchParams({country:"united states",importance:"1,2,3"});
   const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"},next:{revalidate:900},signal:AbortSignal.timeout(12000)});
   if(r.ok){
    const html=await r.text();
-   const table=html.match(/<table\\b[^>]*id=["']calendar["'][^>]*>[\\s\\S]*?<\\/table>/i)?.[0]||"";
+   const table=html.match(/<table\b[^>]*id=["']calendar["'][^>]*>[\s\S]*?<\/table>/i)?.[0]||"";
    if(table){
     let currentDay="";
-    for(const rowMatch of table.matchAll(/<tr\\b([^>]*)>([\\s\\S]*?)<\\/tr>/gi)){
+    for(const rowMatch of table.matchAll(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi)){
      const attrs=rowMatch[1],row=rowMatch[2];
      const heading=clean(row);
-     const dateText=heading.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\\s+([A-Za-z]+)\\s+(\\d{1,2})\\s+(20\\d{2})/i);
+     const dateText=heading.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+([A-Za-z]+)\s+(\d{1,2})\s+(20\d{2})/i);
      if(dateText){
       const month=new Date(dateText[1]+" 1, 2020").getMonth()+1;
       if(month>0)currentDay=dateText[3]+"-"+String(month).padStart(2,"0")+"-"+dateText[2].padStart(2,"0");
@@ -76,7 +76,7 @@ export async function GET(req:NextRequest){
      const event=field(row,"calendar-event");
      if(!event||!(country==="US"||country==="United States"||/data-country=["'](?:US|United States)["']/i.test(attrs)))continue;
      const timeLabel=field(row,"calendar-date")||field(row,"calendar-time");
-     const parsedTime=timeLabel.match(/(\\d{1,2}):(\\d{2})\\s*(AM|PM)/i);
+     const parsedTime=timeLabel.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
      const dateAttr=attrs.match(/data-date=["']([^"']+)/i)?.[1];
      const day=currentDay||(dateAttr?dateAttr.slice(0,10):"");
      if(!day||day<startDay||day>endDay)continue;

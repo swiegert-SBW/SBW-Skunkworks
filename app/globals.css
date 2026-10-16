@@ -627,3 +627,24 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .home-explosion-sound:hover{background:#29455f;color:#fff}
 @media(max-width:850px){.home-death-star{top:calc(6% + 30px);right:clamp(220px,48vw,390px)}.home-death-star-beam{top:calc(6% + 57px);right:calc(3% + 57px);width:calc(clamp(220px,48vw,390px) - 3% - 38px)}}
 @media(prefers-reduced-motion:reduce){.home-death-star-beam,.home-explosion-sound{display:none}}
+
+/* V87: Death Star approaches only slightly from the left, holds after firing. */
+.home-death-star{left:clamp(12px,5vw,85px);right:auto;top:calc(10% + 38px);animation-name:home-death-star-fly-v87}
+.home-death-star-beam{left:calc(clamp(12px,5vw,85px) + 100px);right:calc(clamp(20px,7vw,130px) + 79px);width:auto;top:calc(10% + 77px);animation-name:home-death-star-laser-v87}
+@keyframes home-death-star-fly-v87{
+ 0%,70%{opacity:0;transform:translateX(-155px) scale(.78)}
+ 73%{opacity:.8;transform:translateX(-55px) scale(.92)}
+ 76%,86%{opacity:.85;transform:translateX(0) scale(1)}
+ 92%{opacity:.7;transform:translateX(-85px) scale(.9)}
+ 95%,100%{opacity:0;transform:translateX(-180px) scale(.78)}
+}
+@keyframes home-death-star-laser-v87{
+ 0%,80.9%{opacity:0;transform:scaleX(0)}
+ 81.1%{opacity:1;transform:scaleX(.04)}
+ 81.7%,82.3%{opacity:1;transform:scaleX(1)}
+ 82.31%,100%{opacity:0;transform:scaleX(1)}
+}
+@media(max-width:850px){
+ .home-death-star{left:10px;right:auto;top:calc(6% + 30px)}
+ .home-death-star-beam{left:calc(10px + 68px);right:calc(3% + 57px);width:auto;top:calc(6% + 57px)}
+}

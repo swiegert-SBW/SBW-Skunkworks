@@ -22,6 +22,7 @@ export default function AsciiMoon(){
  const [phase,setPhase]=useState<number|null>(null);
  const [soundOn,setSoundOn]=useState(false);
  const audioRef=useRef<AudioContext|null>(null);
+ const blastRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{const update=()=>setPhase(lunarPhase(new Date()));update();const id=window.setInterval(update,3600000);return()=>window.clearInterval(id)},[]);
  const path=useMemo(()=>phase===null?"":shadowPath(phase),[phase]);
  useEffect(()=>{
@@ -43,10 +44,26 @@ export default function AsciiMoon(){
    const gain=ctx.createGain();gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.26,ctx.currentTime+.03);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+seconds);
    noise.connect(filter);filter.connect(gain);gain.connect(ctx.destination);noise.start();noise.stop(ctx.currentTime+seconds);
   };
-  // Blast is at 82.4% of each 180-second CSS animation cycle.
-  const first=window.setTimeout(()=>{play();const repeating=window.setInterval(play,180000);intervalRef.current=repeating},148320);
-  const intervalRef:{current:number|null}={current:null};
-  return()=>{window.clearTimeout(first);if(intervalRef.current)window.clearInterval(intervalRef.current)};
+  // Read the actual CSS animation clock, rather than starting a new timer
+  // when the visitor enables sound. This keeps sound aligned with the flash.
+  let lastCycle=-1;
+  const sync=()=>{
+   if(document.hidden)return;
+   const animation=blastRef.current?.getAnimations().find(a=>(a.effect as KeyframeEffect|null)?.getTiming().duration===180000);
+   if(!animation)return;
+   const time=Number(animation.currentTime);
+   if(!Number.isFinite(time))return;
+   const cycle=Math.floor(time/180000);
+   const progress=(time%180000)/180000;
+   if(lastCycle<0){lastCycle=cycle;return}
+   if(progress>=.823&&progress<.838&&lastCycle===cycle){
+    lastCycle=cycle+1;
+    play();
+   }else if(progress<.823&&lastCycle<cycle){lastCycle=cycle}
+  };
+  const interval=window.setInterval(sync,80);
+  sync();
+  return()=>window.clearInterval(interval);
  },[soundOn]);
  useEffect(()=>()=>{if(audioRef.current)void audioRef.current.close()},[]);
  const toggleSound=async()=>{
@@ -74,7 +91,7 @@ export default function AsciiMoon(){
    <div className="home-death-star-charge"/>
   </div>
   <div className="home-death-star-beam" aria-hidden="true"/>
-  <div className="home-moon-blast" aria-hidden="true"/>
+  <div ref={blastRef} className="home-moon-blast" aria-hidden="true"/>
   <div className="home-moon-debris" aria-hidden="true">{Array.from({length:9},(_,i)=><span key={i} className={`home-moon-fragment home-moon-fragment-${i+1}`} style={{backgroundImage:'url("'+image+'")'}}/>)}</div>
   <button type="button" className="home-explosion-sound" onClick={toggleSound} aria-pressed={soundOn} title="Browsers require a click to enable sound effects">{soundOn?"🔊 Explosion sound on":"🔇 Enable explosion sound"}</button>
  </div>;

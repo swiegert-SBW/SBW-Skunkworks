@@ -45,7 +45,7 @@ export default function AsciiMoon(){
   };
   // Blast is at 82.4% of each 180-second CSS animation cycle.
   const first=window.setTimeout(()=>{play();const repeating=window.setInterval(play,180000);intervalRef.current=repeating},148320);
-  const intervalRef:{current:ReturnType<typeof setInterval>|null}={current:null};
+  const intervalRef:{current:number|null}={current:null};
   return()=>{window.clearTimeout(first);if(intervalRef.current)window.clearInterval(intervalRef.current)};
  },[soundOn]);
  useEffect(()=>()=>{if(audioRef.current)void audioRef.current.close()},[]);

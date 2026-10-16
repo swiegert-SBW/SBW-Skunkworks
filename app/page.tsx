@@ -10,6 +10,7 @@ export default function Home() {
           <span className="shooting-star shooting-star-one" />
           <span className="shooting-star shooting-star-two" />
           <span className="shooting-star shooting-star-three" />
+          <span className="home-rocket" aria-hidden="true"><span className="home-rocket-flame" /><span className="home-rocket-body">🚀</span></span>
         </div>
         <section className="home-orbit" aria-labelledby="lookup-title">
           <div className="orbit-glow" aria-hidden="true" />

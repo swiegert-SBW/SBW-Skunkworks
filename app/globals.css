@@ -458,3 +458,24 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .heat-sector-panel.heat-sector-docked{height:620px;min-height:0;max-height:calc(100vh - 150px)}
 .heat-sector-docked .heat-sector-rows{height:0;flex:1 1 0;min-height:0;overflow-y:scroll;overscroll-behavior:contain;scrollbar-width:auto}
 @media(max-width:850px){.heat-sector-panel.heat-sector-docked{height:300px;min-height:0;max-height:300px}}
+
+/* V64: shooting stars appear immediately, then repeat naturally. */
+.shooting-star-one{animation-delay:-5.7s}
+.shooting-star-two{animation-delay:-6.8s}
+.shooting-star-three{animation-delay:-8.4s}
+/* Occasional decorative rocket crossing the full landing stage. */
+.home-rocket{position:absolute;left:-90px;top:66%;display:flex;align-items:center;gap:0;white-space:nowrap;opacity:0;font-size:28px;transform:translate3d(0,0,0) rotate(-16deg);animation:home-rocket-fly 32s linear 8s infinite;filter:drop-shadow(0 0 7px #59adff88);will-change:transform;pointer-events:none}
+.home-rocket-flame{display:block;width:55px;height:8px;background:linear-gradient(90deg,transparent,#f6a33a,#ffe29a);clip-path:polygon(0 50%,100% 0,100% 100%);filter:blur(1px)}
+@keyframes home-rocket-fly{0%,6%{opacity:0;transform:translate3d(0,0,0) rotate(-16deg)}7%{opacity:1}22%{opacity:1;transform:translate3d(calc(100vw + 180px),-210px,0) rotate(-16deg)}23%,100%{opacity:0;transform:translate3d(calc(100vw + 180px),-210px,0) rotate(-16deg)}}
+@media(prefers-reduced-motion:reduce){.home-rocket{animation:none;display:none}}
+/* Keep the sector table aligned with the actual rendered heatmap height. */
+.heat-sector-panel.heat-sector-docked{max-height:none;min-height:0;align-self:flex-start}
+.heat-sector-docked .heat-sector-rows{min-height:0;overflow-y:auto}
+@media(max-width:850px){.heat-sector-panel.heat-sector-docked{max-height:none}}
+/* Match the platform's button styling without exposing the native file input. */
+.watch-import .watch-import-native{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%)}
+.watch-import-button{display:inline-flex!important;align-items:center;gap:9px;width:max-content;max-width:100%;padding:9px 14px;border-radius:5px;border:1px solid #3789c2;background:#2477ad;color:#fff;cursor:pointer;font-size:12px;font-weight:650;transition:background .15s,border-color .15s}
+.watch-import-button:hover{background:#308bc5;border-color:#65b3ec}
+.watch-import-button span{font-size:18px;line-height:1}
+.watch-import-native:focus-visible+.watch-import-button{outline:2px solid #89caff;outline-offset:3px}
+.watch-import-button.is-disabled{opacity:.5;cursor:wait}

@@ -588,3 +588,34 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-benz-brand .news-mark-brand small{font-size:10px;line-height:1.35;max-width:170px;margin:0;color:#a5c2db}
 @media(max-width:1000px){.news-benz-header{grid-template-columns:minmax(230px,1.2fr) minmax(220px,1.6fr) auto}.news-mark-brand{gap:7px}}
 @media(max-width:720px){.news-benz-header{grid-template-columns:1fr auto}}
+
+/* V84: occasional Death Star / moon Easter egg, all presentation-only. */
+.home-lunar-scene{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;--lunar-cycle:180s}
+.home-lunar-scene .home-photo-moon{position:absolute;top:10%;right:clamp(20px,7vw,130px);animation:home-moon-return var(--lunar-cycle) linear infinite;transform-origin:center;overflow:hidden}
+.home-death-star{position:absolute;width:112px;height:112px;top:13%;right:clamp(210px,28vw,480px);opacity:0;transform:translateX(-75vw) scale(.75);animation:home-death-star-fly var(--lunar-cycle) linear infinite;filter:drop-shadow(0 0 9px #b4d5fa44)}
+.home-death-star svg{width:100%;height:100%;display:block}
+.home-death-star-charge{position:absolute;left:65%;top:25%;width:32px;height:32px;border-radius:50%;background:#7aff8a;box-shadow:0 0 20px 7px #46fa64;opacity:0;animation:home-death-star-charge var(--lunar-cycle) linear infinite}
+.home-death-star-beam{position:absolute;left:76%;top:37%;width:clamp(160px,27vw,470px);height:5px;background:linear-gradient(90deg,#d9ffdb,#6eff6d);box-shadow:0 0 9px 3px #42ff6d,0 0 18px 5px #2af24e;border-radius:5px;transform-origin:left center;transform:scaleX(0);opacity:0;animation:home-death-star-laser var(--lunar-cycle) linear infinite}
+.home-moon-blast{position:absolute;top:calc(10% + 30px);right:calc(clamp(20px,7vw,130px) + 30px);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#c7f8dd 22%,#83f5a8 36%,#63c4a955 55%,transparent 72%);opacity:0;transform:scale(.1);animation:home-moon-explosion var(--lunar-cycle) linear infinite}
+.home-moon-debris{position:absolute;top:10%;right:clamp(20px,7vw,130px);width:158px;height:158px;opacity:0;animation:home-moon-fragments var(--lunar-cycle) linear infinite}
+.home-moon-fragment{position:absolute;left:43%;top:43%;width:30px;height:30px;background-size:158px 158px;background-position:center;clip-path:polygon(10% 15%,70% 0,100% 55%,57% 100%,0 70%);filter:brightness(.85) drop-shadow(0 0 3px #9ce9b8)}
+.home-moon-fragment-1{--fx:-170px;--fy:-115px;--fr:-90deg}.home-moon-fragment-2{--fx:115px;--fy:-150px;--fr:140deg}
+.home-moon-fragment-3{--fx:-80px;--fy:160px;--fr:90deg}.home-moon-fragment-4{--fx:170px;--fy:95px;--fr:-120deg}
+.home-moon-fragment-5{--fx:45px;--fy:-190px;--fr:220deg}.home-moon-fragment-6{--fx:-205px;--fy:15px;--fr:175deg}
+.home-moon-fragment-7{--fx:135px;--fy:180px;--fr:260deg}.home-moon-fragment-8{--fx:-110px;--fy:-200px;--fr:-230deg}
+.home-moon-fragment-9{--fx:210px;--fy:-30px;--fr:160deg}
+.home-moon-fragment{animation:home-moon-piece var(--lunar-cycle) linear infinite}
+@keyframes home-death-star-fly{
+ 0%,70%{opacity:0;transform:translateX(-75vw) scale(.75)}
+ 73%{opacity:.82}76%,81%{opacity:.86;transform:translateX(0) scale(1)}
+ 88%{opacity:.75;transform:translateX(18vw) scale(.92)}
+ 91%,100%{opacity:0;transform:translateX(90vw) scale(.75)}
+}
+@keyframes home-death-star-charge{0%,77%,81.4%,100%{opacity:0;transform:scale(.2)}79%,80.5%{opacity:.95;transform:scale(1)}}
+@keyframes home-death-star-laser{0%,80.9%,82.8%,100%{opacity:0;transform:scaleX(0)}81.1%{opacity:1;transform:scaleX(.1)}81.7%,82.3%{opacity:1;transform:scaleX(1)}}
+@keyframes home-moon-return{0%,81.8%{opacity:.73;transform:translateX(0) scale(1)}82.3%{opacity:1;transform:scale(1.12)}83%,91%{opacity:0;transform:scale(.5)}92%{opacity:0;transform:translateX(25vw) scale(.8)}96%,100%{opacity:.73;transform:translateX(0) scale(1)}}
+@keyframes home-moon-explosion{0%,81.9%,84.5%,100%{opacity:0;transform:scale(.1)}82.4%{opacity:1;transform:scale(1)}83.5%{opacity:.65;transform:scale(2.1)}}
+@keyframes home-moon-fragments{0%,82.4%,89%,100%{opacity:0}82.7%,86%{opacity:.9}}
+@keyframes home-moon-piece{0%,82.4%{transform:translate(0,0) rotate(0)}90%,100%{transform:translate(var(--fx),var(--fy)) rotate(var(--fr))}}
+@media(max-width:850px){.home-lunar-scene .home-photo-moon{top:6%;right:3%;width:115px;height:115px}.home-death-star{width:75px;height:75px;top:8%;right:34%}.home-moon-debris{top:6%;right:3%;transform:scale(.73);transform-origin:top right}.home-moon-blast{top:7%;right:5%}}
+@media(prefers-reduced-motion:reduce){.home-lunar-scene .home-photo-moon{animation:none;opacity:.73}.home-death-star,.home-moon-blast,.home-moon-debris{display:none}}

@@ -20,7 +20,7 @@ def get(url):
 def symbol(s):
     return str(s).strip().upper().replace(".","-")
 def clean(s):
-    return re.sub(r"\\s+"," ",str(s or "").strip())
+    return re.sub(r"\s+"," ",str(s or "").strip())
 def from_wikipedia(url,table_id):
     html=get(url).decode("utf-8")
     frames=pd.read_html(io.StringIO(html),attrs={"id":table_id})
@@ -28,30 +28,19 @@ def from_wikipedia(url,table_id):
     return frames[0]
 sp=from_wikipedia("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies","constituents")
 sp_rows=[{"ticker":symbol(r["Symbol"]),"name":clean(r["Security"]),"sector":clean(r["GICS Sector"]),"industry":clean(r["GICS Sub-Industry"])} for _,r in sp.iterrows()]
-dow_html=get("https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average").decode("utf-8")
-dow_tables=pd.read_html(io.StringIO(dow_html))
-dow=next((frame for frame in dow_tables if {"Company","Symbol"}.issubset({str(c).strip() for c in frame.columns}) and len(frame)==30),None)
-if dow is None:raise RuntimeError("Dow components table not found by Company/Symbol columns and 30-row validation")
-print("Dow columns",list(dow.columns))
-def col(df,*candidates):
-    cols={str(c).lower().strip():c for c in df.columns}
-    for c in candidates:
-        if c.lower() in cols:return cols[c.lower()]
-    raise RuntimeError("Missing required column: "+str(candidates))
-dow_rows=[{"ticker":symbol(r[col(dow,"Symbol")]),"name":clean(r[col(dow,"Company")]),"sector":clean(r[col(dow,"Industry","Sector")]),"industry":clean(r[col(dow,"Industry","Sector")])} for _,r in dow.iterrows()]
 iwm=get("https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund").decode("utf-8-sig")
 lines=iwm.splitlines()
 start=next((i for i,line in enumerate(lines) if line.startswith("Ticker,") or line.startswith('"Ticker",')),None)
 if start is None:raise RuntimeError("IWM holdings CSV header missing")
-holdings=list(csv.DictReader(io.StringIO("\\n".join(lines[start:]))))
+holdings=list(csv.DictReader(io.StringIO("\n".join(lines[start:]))))
 russ=[]
 for row in holdings:
     t=symbol(row.get("Ticker",""))
     asset=(row.get("Asset Class") or "").lower()
     if not re.fullmatch(r"[A-Z][A-Z0-9-]{0,11}",t) or ("equity" not in asset and asset):continue
     russ.append({"ticker":t,"name":clean(row.get("Name")),"sector":clean(row.get("Sector")),"industry":clean(row.get("Sector"))})
-if len(sp_rows)<490 or len(dow_rows)!=30 or len(russ)<1800:
-    raise RuntimeError(f"Incomplete constituents: S&P {len(sp_rows)}, Dow {len(dow_rows)}, IWM {len(russ)}")
+if len(sp_rows)<490 or len(russ)<1800:
+    raise RuntimeError(f"Incomplete constituents: S&P {len(sp_rows)}, IWM {len(russ)}")
 # Nasdaq supplies reported market capitalization for US-listed equities.
 nasdaq=json.loads(get("https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=6000&offset=0").decode("utf-8"))
 rows=nasdaq.get("data",{}).get("table",{}).get("rows",[])
@@ -65,7 +54,7 @@ def cap(s):
     except (ValueError,OverflowError):return None
 caps={symbol(r.get("symbol","")):cap(r.get("marketCap")) for r in rows}
 stamp=datetime.now(timezone.utc).isoformat()
-for key,source,items in [("sp500","Wikipedia S&P 500 constituents",sp_rows),("djia","Wikipedia Dow Jones Industrial Average constituents",dow_rows),("russell2000","iShares IWM ETF equity holdings (Russell 2000 proxy)",russ)]:
+for key,source,items in [("sp500","Wikipedia S&P 500 constituents",sp_rows),("russell2000","iShares IWM ETF equity holdings (Russell 2000 proxy)",russ)]:
     seen=set();out=[]
     for r in items:
         t=r["ticker"]
@@ -73,8 +62,7 @@ for key,source,items in [("sp500","Wikipedia S&P 500 constituents",sp_rows),("dj
         seen.add(t)
         out.append({**r,"marketCap":caps.get(t),"marketCapSource":"Nasdaq public stock screener" if caps.get(t) is not None else None})
     if key=="sp500" and len(out)<490:raise RuntimeError("Incomplete S&P 500")
-    if key=="djia" and len(out)!=30:raise RuntimeError("Incomplete DJIA")
     if key=="russell2000" and len(out)<1800:raise RuntimeError("Incomplete IWM proxy")
     payload={"index":key,"asOf":stamp,"constituentSource":source,"marketCapSource":"Nasdaq public stock screener","count":len(out),"missingMarketCaps":sum(r["marketCap"] is None for r in out),"constituents":out}
-    (ROOT/(key+".json")).write_text(json.dumps(payload,separators=(",",":"),ensure_ascii=False)+"\\n")
+    (ROOT/(key+".json")).write_text(json.dumps(payload,separators=(",",":"),ensure_ascii=False)+"\n")
     print(key,len(out),"missing market caps",payload["missingMarketCaps"])

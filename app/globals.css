@@ -530,3 +530,12 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-benz-mark{display:grid;place-items:center;width:35px;height:35px;border-radius:9px;background:#245b86;color:#d8f3ff;font-size:22px}
 .news-benz-status{font-size:11px;color:#98c7eb;white-space:nowrap}.news-benz-body{padding:16px 19px;color:#e4ebf4;font-size:13px;line-height:1.7}.news-benz-body p{margin:0}
 .news-benz-footer{border-top:1px solid #304253;padding:9px 18px;color:#8ea5b9;font-size:10px}
+
+/* V74: small, detailed ASCII moon with slow lunar drift and moving terminator. */
+.home-ascii-moon{position:absolute;top:9%;right:clamp(18px,6vw,115px);z-index:0;pointer-events:none;opacity:.82;animation:ascii-moon-drift 24s ease-in-out infinite;filter:drop-shadow(0 0 14px #a9c7ee38)}
+.home-ascii-moon pre{position:relative;margin:0;font:600 5px/5.4px "Courier New",monospace;letter-spacing:0;white-space:pre;color:#b8c9df;text-shadow:0 0 3px #a7c8f055}
+.home-ascii-moon::after{content:"";position:absolute;inset:-3px;border-radius:50%;background:linear-gradient(100deg,transparent 28%,rgba(7,13,24,.14) 55%,rgba(7,13,24,.72) 100%);animation:ascii-moon-light 35s ease-in-out infinite alternate}
+@keyframes ascii-moon-drift{0%,100%{transform:translate3d(0,0,0) rotate(-3deg)}50%{transform:translate3d(-7px,9px,0) rotate(3deg)}}
+@keyframes ascii-moon-light{0%{transform:translateX(-18%)}100%{transform:translateX(16%)}}
+@media(max-width:850px){.home-ascii-moon{right:3%;top:4%;opacity:.5;transform:scale(.8);transform-origin:top right}}
+@media(prefers-reduced-motion:reduce){.home-ascii-moon,.home-ascii-moon::after{animation:none}}

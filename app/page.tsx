@@ -1,11 +1,13 @@
 import SearchBox from "@/components/SearchBox";
 import Link from "next/link";
+import AsciiMoon from "@/components/AsciiMoon";
 
 export default function Home() {
   return (
     <>
       <div className="pagebar">Company/Security</div>
       <main className="home-stage">
+        <AsciiMoon />
         <div className="starfield" aria-hidden="true">
           <span className="shooting-star shooting-star-one" />
           <span className="shooting-star shooting-star-two" />

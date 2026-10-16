@@ -61,8 +61,7 @@ export async function GET(req: NextRequest) {
   const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+page.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),next:{revalidate:300}});
   if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q;}
  }catch{}
- const tiles=[];
- for(const ticker of page){
+ const tiles=await Promise.all(page.map(async ticker=>{
   const q=quoteMap[ticker],info=INFO[ticker];
   let d:any=null;
   try {
@@ -82,7 +81,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  tiles.push({ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote});
- }
+  return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+ }));
  return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"public, s-maxage=900, stale-while-revalidate=1800"}});
 }

@@ -5,7 +5,7 @@ type Story={title:string;url:string;source:string;published:string;description:s
 type CalendarItem={time:string;name:string;actual:string;previous:string;consensus:string;impact:string;reference?:string};
 const decode=(s:string)=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim();
 const tag=(s:string,t:string)=>s.match(new RegExp("<"+t+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+t+">","i"))?.[1]||"";
-const ALLOWED=[/\bcnbc\b/i,/\bbarron['’]?s\b/i,/\bwall street journal\b/i,/\bwsj\b/i,/\bpr newswire\b/i,/\bbusiness wire\b/i,/\bglobenewswire\b/i,/\baccesswire\b/i,/\bnewsfile\b/i];
+const ALLOWED=[/\bcnbc\b/i,/\bbarron['’]?s\b/i,/\bwall street journal\b/i,/\bwsj\b/i,/\bpr newswire\b/i,/\bbusiness wire\b/i,/\bglobenewswire\b/i,/\baccesswire\b/i,/\bnewsfile\b/i,/\bfierce\s*pharma\b/i,/\bfirstword\s*pharma\b/i];
 const publisherQuery="(site:cnbc.com OR site:barrons.com OR site:wsj.com OR site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com OR site:accesswire.com OR site:newsfilecorp.com OR site:fiercepharma.com OR site:firstwordpharma.com)";
 async function feed(query:string,limit:number):Promise<Story[]>{
  const url="https://news.google.com/rss/search?"+new URLSearchParams({q:query,hl:"en-US",gl:"US",ceid:"US:en"});
@@ -38,12 +38,12 @@ export async function GET(req:NextRequest){
  ]);
  const escaped=(s:string)=>s.replace(/[^a-zA-Z0-9 ]/g,"\\$&");
  const matches=(title:string,ticker:string,name:string)=>{
-  const exact=(term:string)=>term.length>=2&&new RegExp("(^|[^A-Za-z0-9])"+escaped(term)+"(?=$|[^A-Za-z0-9])","i").test(title);
-  if(name.length>=5&&exact(name))return 3;
+  const exact=(term:string,flags:string)=>term.length>=2&&new RegExp("(^|[^A-Za-z0-9])"+escaped(term)+"(?=$|[^A-Za-z0-9])",flags).test(title);
+  if(name.length>=5&&exact(name,"i"))return 3;
   const core=name.split(" ").filter(w=>w.length>=5).slice(0,2).join(" ");
-  if(core.length>=5&&exact(core))return 2;
-  if(ticker.length>=3&&exact(ticker.replace(/-/g,".")))return 1;
-  if(ticker.length>=3&&exact(ticker))return 1;
+  if(core.length>=5&&exact(core,"i"))return 2;
+  // Tickers must be uppercase, standalone tokens, not parts of other words.
+  if(ticker.length>=3&&(exact(ticker.replace(/-/g,"."),"")||exact(ticker,"")))return 1;
   return 0;
  };
  const cutoff=Date.now()-5*24*60*60*1000;
@@ -52,44 +52,26 @@ export async function GET(req:NextRequest){
  const dateKey=(d:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
  const startDay=dateKey(now),endDay=dateKey(new Date(now.getTime()+7*86400000));
  const upcoming:CalendarItem[]=[];
- let calendarSource="Trading Economics public website",calendarStatus="unavailable";
- const clean=(s:string)=>decode(s.replace(/&nbsp;|&#160;/g," ").trim());
- const field=(row:string,part:string)=>{const cells=[...row.matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)];const cell=cells.find(m=>m[1].includes(part));return cell?clean(cell[2]):""};
+ let calendarSource="XOOMAR",calendarStatus="unavailable";
  try{
-  const url="https://tradingeconomics.com/calendar?"+new URLSearchParams({country:"united states",importance:"1,2,3"});
-  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"},next:{revalidate:900},signal:AbortSignal.timeout(12000)});
+  const url="https://xoomar.com/api/markets/calendar?"+new URLSearchParams({from:startDay,to:endDay});
+  const r=await fetch(url,{next:{revalidate:900},signal:AbortSignal.timeout(10000)});
   if(r.ok){
-   const html=await r.text();
-   const table=html.match(/<table\b[^>]*id=["']calendar["'][^>]*>[\s\S]*?<\/table>/i)?.[0]||"";
-   if(table){
-    let currentDay="";
-    for(const rowMatch of table.matchAll(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi)){
-     const attrs=rowMatch[1],row=rowMatch[2];
-     const heading=clean(row);
-     const dateText=heading.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+([A-Za-z]+)\s+(\d{1,2})\s+(20\d{2})/i);
-     if(dateText){
-      const month=new Date(dateText[1]+" 1, 2020").getMonth()+1;
-      if(month>0)currentDay=dateText[3]+"-"+String(month).padStart(2,"0")+"-"+dateText[2].padStart(2,"0");
-      continue;
-     }
-     const country=field(row,"calendar-country")||field(row,"calendar-flag");
-     const event=field(row,"calendar-event");
-     if(!event||!(country==="US"||country==="United States"||/data-country=["'](?:US|United States)["']/i.test(attrs)))continue;
-     const timeLabel=field(row,"calendar-date")||field(row,"calendar-time");
-     const parsedTime=timeLabel.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-     const dateAttr=attrs.match(/data-date=["']([^"']+)/i)?.[1];
-     const day=currentDay||(dateAttr?dateAttr.slice(0,10):"");
-     if(!day||day<startDay||day>endDay)continue;
-     // The public page can display times in its own timezone. Keep its displayed time
-     // as a label rather than silently converting it as if it were UTC.
-     const clock=parsedTime?parsedTime[0]:"";
-     const iso=day+"T12:00:00Z";
-     upcoming.push({time:iso,name:event,actual:field(row,"calendar-actual"),previous:field(row,"calendar-previous"),consensus:field(row,"calendar-consensus"),impact:"",reference:clock});
+   const json=await r.json();
+   if(Array.isArray(json.data)){
+    for(const e of json.data){
+     const ms=Date.parse(String(e.scheduledAt||""));
+     if(!Number.isFinite(ms))continue;
+     const time=new Date(ms);
+     const day=dateKey(time);
+     if(day<startDay||day>endDay)continue;
+     const value=(v:unknown)=>v===null||v===undefined?"":String(v);
+     upcoming.push({time:time.toISOString(),name:value(e.eventName),actual:value(e.actual),previous:value(e.previous),consensus:value(e.forecast),impact:value(e.importance),reference:value(e.periodLabel)});
     }
-    if(upcoming.length)calendarStatus="ok";
+    calendarStatus="ok";
    }
   }
  }catch{}
- upcoming.sort((a,b)=>a.time.localeCompare(b.time)||(a.reference||"").localeCompare(b.reference||""));
+ upcoming.sort((a,b)=>a.time.localeCompare(b.time));
  return NextResponse.json({market:dedupe(market).slice(0,24),companies,upcoming:upcoming.slice(0,150),updatedAt:new Date().toISOString(),calendarSource,calendarStatus,newsSource:"Google News RSS (publisher-linked headlines)",watchlistSymbolsSearched:symbols}, {headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=600"}});
 }

@@ -20,18 +20,48 @@ const fields:Field[]=[
  {key:"atr",label:"Average True Range",available:false},{key:"average_volume",label:"Average Volume"},{key:"relative_volume",label:"Relative Volume",available:false},{key:"current_volume",label:"Current Volume",available:false},{key:"trades",label:"Trades",available:false},
  {key:"price",label:"Price $"},{key:"target_price",label:"Target Price",available:false},{key:"ipo_date",label:"IPO Date",available:false},{key:"shares_outstanding",label:"Shares Outstanding",available:false},{key:"float",label:"Float",available:false}
 ];
+type Preset={label:string;min?:number;max?:number};
+const threshold=(values:number[],unit="") :Preset[]=>[
+ ...values.map(v=>({label:"Over "+v+unit,min:v})),
+ ...values.map(v=>({label:"Under "+v+unit,max:v}))
+];
+const presets=(f:Field):Preset[]=>{
+ if(f.key==="market_cap")return [
+ {label:"Mega ($200B+)",min:200},{label:"Large ($10B–$200B)",min:10,max:200},
+ {label:"Mid ($2B–$10B)",min:2,max:10},{label:"Small ($300M–$2B)",min:.3,max:2},
+ {label:"Micro ($50M–$300M)",min:.05,max:.3},{label:"Nano (under $50M)",max:.05},
+ {label:"Over $2B",min:2},{label:"Over $10B",min:10},{label:"Under $50B",max:50},
+ {label:"$2B–$50B",min:2,max:50}];
+ if(f.key==="price")return [{label:"Under $1",max:1},{label:"$1–$5",min:1,max:5},{label:"$5–$10",min:5,max:10},{label:"$10–$50",min:10,max:50},{label:"$50–$100",min:50,max:100},{label:"Over $100",min:100}];
+ if(f.key==="average_volume")return [{label:"Over 50K",min:50000},{label:"Over 100K",min:100000},{label:"Over 500K",min:500000},{label:"Over 1M",min:1000000},{label:"Over 5M",min:5000000}];
+ if(f.unit==="percent")return threshold([0,5,10,15,20,25,30,40,50],"%");
+ if(["current","quick","debt_to_equity"].includes(f.key))return threshold([.5,1,1.5,2,3,5]);
+ return threshold([0,5,10,15,20,25,30,40,50]);
+};
 const columns=[["ticker","Ticker"],["price","Price"],["market_cap","Market Cap"],["price_to_earnings","P/E"],["price_to_sales","P/S"],["price_to_book","P/B"],["ev_to_ebitda","EV/EBITDA"],["return_on_equity","ROE"],["return_on_assets","ROA"],["debt_to_equity","D/E"],["dividend_yield","Div. Yield"],["free_cash_flow","FCF"]];
 const format=(v:unknown,key:string)=>{if(typeof v!=="number"||!Number.isFinite(v))return "—";if(key==="market_cap"||key==="free_cash_flow")return Math.abs(v)>=1e12?(v/1e12).toFixed(2)+"T":Math.abs(v)>=1e9?(v/1e9).toFixed(2)+"B":Math.abs(v)>=1e6?(v/1e6).toFixed(1)+"M":v.toLocaleString();if(["return_on_equity","return_on_assets","dividend_yield"].includes(key))return (v*100).toFixed(2)+"%";return v.toLocaleString(undefined,{maximumFractionDigits:2})};
 export default function ScreeningPage(){
  const [filters,setFilters]=useState<Record<string,string>>({}),[mode,setMode]=useState<"ratios"|"reference">("ratios"),[ticker,setTicker]=useState(""),[rows,setRows]=useState<Item[]>([]),[cursor,setCursor]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[sort,setSort]=useState("ticker"),[descending,setDescending]=useState(false),[requested,setRequested]=useState(false);
- const active=Object.entries(filters).filter(([,v])=>v!=="").length;
+ const active=fields.filter(f=>{const v=filters[f.key]||"";return v!==""&&(f.available!==false)}).length;
  const load=async(next?:string,selectedMode=mode)=>{
   setBusy(true);setError("");setNotice("");
   try{
    const params=new URLSearchParams({mode:selectedMode});
    if(ticker.trim())params.set("ticker",ticker.trim().toUpperCase());
    if(next)params.set("cursor",next);
-   if(selectedMode==="ratios")for(const [k,v] of Object.entries(filters)){if(!v||k==="exchange")continue;const [key,op]=k.split(":");const field=fields.find(f=>f.key===key);if(!field||field.available===false)continue;const n=Number(v);if(!Number.isFinite(n))continue;params.set(key+"."+op,String(field.unit==="percent"?n/100:field.unit==="money"?n*1e9:n))}
+   if(selectedMode==="ratios")for(const field of fields){
+    if(field.available===false||field.kind==="select")continue;
+    const selection=filters[field.key]||"";
+    if(!selection)continue;
+    const preset=selection==="custom"?null:presets(field)[Number(selection)];
+    const limits=selection==="custom"?{min:filters[field.key+":gte"],max:filters[field.key+":lte"]}:preset?{min:preset.min,max:preset.max}:null;
+    if(!limits)continue;
+    for(const [side,op] of [["min","gte"],["max","lte"]] as const){
+     const v=limits[side];if(v===undefined||v==="")continue;
+     const n=Number(v);if(!Number.isFinite(n))continue;
+     params.set(field.key+"."+op,String(field.unit==="percent"?n/100:field.unit==="money"?n*1e9:n));
+    }
+   }
    if(selectedMode==="reference"&&filters.exchange)params.set("exchange",filters.exchange);
    const res=await fetch("/api/screening?"+params,{cache:"no-store"});const json=await res.json();
    if(!res.ok)throw Error(json.error||"Request failed");
@@ -45,7 +75,8 @@ export default function ScreeningPage(){
  const filterCell=(f:Field)=>{
   const unavailable=f.available===false||(mode==="reference"&&f.kind!=="select");
   if(f.kind==="select")return <select aria-label={f.label} value={filters[f.key]||""} disabled={unavailable} onChange={e=>update(f.key,e.target.value)}><option value="">Any</option>{(f.options||[]).map(o=><option key={o} value={o}>{o}</option>)}</select>;
-  return <div className="screen-range">{(["gte","lte"] as const).map((op)=><input key={op} aria-label={f.label+" "+(op==="gte"?"minimum":"maximum")} type="number" step="any" disabled={unavailable} placeholder={op==="gte"?"Min":"Max"} value={filters[f.key+":"+op]||""} onChange={e=>update(f.key+":"+op,e.target.value)}/>)}</div>;
+  const options=presets(f),selection=filters[f.key]||"";
+  return <div className="screen-filter-control"><select aria-label={f.label} value={selection} disabled={unavailable} onChange={e=>update(f.key,e.target.value)}><option value="">Any</option>{options.map((o,i)=><option key={i} value={String(i)}>{o.label}</option>)}<option value="custom">Custom range…</option></select>{selection==="custom"&&!unavailable&&<div className="screen-range">{(["gte","lte"] as const).map(op=><input key={op} aria-label={f.label+" "+(op==="gte"?"minimum":"maximum")} type="number" step="any" placeholder={op==="gte"?"Min":"Max"} value={filters[f.key+":"+op]||""} onChange={e=>update(f.key+":"+op,e.target.value)}/>)}</div>}</div>;
  };
  return <><div className="pagebar">Screening <span className="muted">/ Massive-powered equity filters</span></div><main className="screen-page"><div className="screen-toolbar"><div><h1>Stock Screener</h1><p className="muted small">Combine filters to find securities. Financial ratios require Massive Financials & Ratios access.</p></div><div className="screen-controls"><label>Dataset <select value={mode} onChange={e=>{setMode(e.target.value as "ratios"|"reference");setRows([]);setRequested(false);setFilters({})}}><option value="ratios">Financials & Ratios</option><option value="reference">All listed tickers</option></select></label><label>Symbol <input value={ticker} onChange={e=>setTicker(e.target.value)} placeholder="Any ticker" /></label><button disabled={busy} onClick={()=>load()}>{busy?"Loading…":"Run screen"}</button><button className="screen-reset" onClick={()=>{setFilters({});setTicker("");setRows([]);setRequested(false);setCursor(null)}}>Reset</button></div></div><div className="screen-filters">{fields.map(f=><div key={f.key} className={"screen-filter"+(f.available===false||(mode==="reference"&&f.kind!=="select")?" screen-disabled":"")} title={f.available===false?"Not available from Massive ratios endpoint":undefined}><label>{f.label}</label>{filterCell(f)}</div>)}</div><div className="screen-foot"><span>{active} active filters · {rows.length} loaded securities{cursor?" · More available":""}</span><span>Market cap inputs in USD billions; percentage inputs as %, e.g. 15 for 15%</span></div>{error&&<div className="screen-error">{error}{error.includes("MASSIVE_API_KEY")?<p>Add the key in Vercel → Project Settings → Environment Variables, then redeploy. GitHub secrets are not automatically shared with Vercel.</p>:null}</div>}{notice&&<p className="muted small">{notice}</p>}<div className="screen-results"><table><thead><tr>{(mode==="reference"?[["ticker","Ticker"],["name","Company"],["primary_exchange","Exchange"],["locale","Country"],["type","Type"]]:columns).map(([key,label])=><th key={key}><button onClick={()=>{setDescending(sort===key?!descending:false);setSort(key)}}>{label} {sort===key?(descending?"↓":"↑"):""}</button></th>)}</tr></thead><tbody>{sorted.map((r,i)=><tr key={String(r.ticker)+i}>{(mode==="reference"?["ticker","name","primary_exchange","locale","type"]:columns.map(c=>c[0])).map(key=><td key={key}>{key==="ticker"?<a href={"/company/"+encodeURIComponent(String(r.ticker))}>{String(r.ticker)}</a>:typeof r[key]==="number"?format(r[key],key):String(r[key]??"—")}</td>)}</tr>)}</tbody></table>{!rows.length&&<p className="screen-empty">{requested?"No matching results returned.":"Set your filters and run a screen to load data from Massive."}</p>}</div>{cursor&&<button className="screen-more" disabled={busy} onClick={()=>load(cursor)}>{busy?"Loading…":"Load next 500 results"}</button>}<p className="muted small">Data source: <a href="https://massive.com/docs/rest/stocks/overview" target="_blank" rel="noopener noreferrer">Massive API</a>. Metrics without supported endpoints are disabled rather than estimated. Screens run against the available API dataset, not a sample of locally stored stocks.</p></main></>;
 }

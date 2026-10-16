@@ -434,3 +434,7 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .heat-sector-panel{right:auto;bottom:auto;transform:translateY(-50%);pointer-events:none}
 .heat-sector-rows{pointer-events:none}
 @media(max-width:700px){.heat-sector-panel{right:auto;bottom:auto;transform:translateY(-50%);width:285px;max-width:calc(100vw - 16px)}}
+
+/* V56: the stock-adjacent quote panel accepts hover and wheel scrolling. */
+.heat-sector-panel{pointer-events:auto}
+.heat-sector-rows{pointer-events:auto;overscroll-behavior:contain}

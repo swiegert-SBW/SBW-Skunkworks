@@ -54,7 +54,7 @@ export async function GET(req:NextRequest){
  const upcoming:CalendarItem[]=[];
  let calendarSource="Trading Economics public website",calendarStatus="unavailable";
  const clean=(s:string)=>decode(s.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,"").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,"")).replace(/&nbsp;|&#160;/g," ").trim();
- const field=(row:string,part:string)=>{const m=row.match(new RegExp("<td\\\\b[^>]*class=[\\\"'][^\\\"']*"+part+"[^\\\"']*[\\\"'][^>]*>([\\\\s\\\\S]*?)<\\\\/td>","i"));return m?clean(m[1]):""};
+ const field=(row:string,part:string)=>{const cells=[...row.matchAll(/<td\\b([^>]*)>([\\s\\S]*?)<\\/td>/gi)];const cell=cells.find(m=>m[1].includes(part));return cell?clean(cell[2]):""};
  try{
   const url="https://tradingeconomics.com/calendar?"+new URLSearchParams({country:"united states",importance:"1,2,3"});
   const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0 (compatible; SBWWorkstation/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"},next:{revalidate:900},signal:AbortSignal.timeout(12000)});

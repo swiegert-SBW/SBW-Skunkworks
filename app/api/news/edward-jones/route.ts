@@ -31,7 +31,7 @@ function summary(entries:Entry[]):string{
   const sentences=detail.replace(/\s+/g," ").trim().split(/(?<=[.!?])\s+(?=[A-Z“])/).filter(s=>s.length>25);
   const first=sentences[0]||detail;
   const additional=sentences.slice(1).find(s=>/\d+(?:\.\d+)?%|\$\d|Treasury|earnings estimates|industrial production/i.test(s));
-  return title+". "+[first,additional].filter(Boolean).map(s=>s.trim()).join(" ");
+  return title+". "+[first,additional].filter((s):s is string=>typeof s==="string").map(s=>s.trim()).join(" ");
  }).join(" ");
 }
 

@@ -48,7 +48,7 @@ export default function WatchlistTickerMarquee(){
   read();
   window.addEventListener("storage",read);
   window.addEventListener("sbw-watchlists-updated",read);
-  const timer=window.setInterval(read,120000);
+  const timer=window.setInterval(read,300000);
   return()=>{live=false;request++;window.removeEventListener("storage",read);window.removeEventListener("sbw-watchlists-updated",read);window.clearInterval(timer)};
  },[]);
  const render=(copy:number)=>tiles.map(t=><div className="tick" key={copy+"-"+t.ticker} title={t.name?t.name+" ("+t.ticker+")":t.ticker}><span className="tick-label">{t.ticker}</span><span className="tick-val">{fmt(t.price)}</span><span className={"tick-chg "+(t.change<0?"neg":"pos")}>{t.quoteAvailable===false?"—":(t.change>=0?"+":"")+(Number.isFinite(t.change)?t.change:0).toFixed(2)+"%"}</span>{t.name&&<span className="tick-company">{t.name}</span>}</div>);

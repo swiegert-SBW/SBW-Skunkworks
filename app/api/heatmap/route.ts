@@ -55,6 +55,9 @@ export async function GET(req: NextRequest) {
    const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(8000),cache:"no-store"});
    if(r.ok)d=(await r.json())?.chart?.result?.[0];
   }catch{}
+  if(!d){
+   try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),cache:"no-store"});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
+  }
   const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice);
   const prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose);
   const closes=(d?.indicators?.quote?.[0]?.close||[]).filter((v:any)=>typeof v==="number"&&Number.isFinite(v));
@@ -64,7 +67,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  return {ticker,name:q?.shortName||q?.longName||info?.[0]||d?.meta?.longName||d?.meta?.shortName||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+  return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
  }));
  return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"public, s-maxage=900, stale-while-revalidate=1800"}});
 }

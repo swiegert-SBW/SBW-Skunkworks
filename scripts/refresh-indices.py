@@ -28,7 +28,10 @@ def from_wikipedia(url,table_id):
     return frames[0]
 sp=from_wikipedia("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies","constituents")
 sp_rows=[{"ticker":symbol(r["Symbol"]),"name":clean(r["Security"]),"sector":clean(r["GICS Sector"]),"industry":clean(r["GICS Sub-Industry"])} for _,r in sp.iterrows()]
-dow=from_wikipedia("https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average","constituents")
+dow_html=get("https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average").decode("utf-8")
+dow_tables=pd.read_html(io.StringIO(dow_html))
+dow=next((frame for frame in dow_tables if {"Company","Symbol"}.issubset({str(c).strip() for c in frame.columns}) and len(frame)==30),None)
+if dow is None:raise RuntimeError("Dow components table not found by Company/Symbol columns and 30-row validation")
 print("Dow columns",list(dow.columns))
 def col(df,*candidates):
     cols={str(c).lower().strip():c for c in df.columns}

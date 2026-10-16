@@ -1,10 +1,10 @@
-// Deterministic server-rendered ASCII moon: no images, dependencies, or hydration.
+// Deterministic, small ASCII moon with strongly outlined craters.
 const width=43;
 const height=23;
 const glyphs=" .,:;irsXA253hMHGS#9B&@";
 const craters=[
- {x:-.38,y:-.29,r:.22},{x:.35,y:-.41,r:.17},{x:-.12,y:.36,r:.24},
- {x:.52,y:.19,r:.15},{x:-.61,y:.23,r:.11},{x:.06,y:-.06,r:.09}
+ {x:-.37,y:-.27,r:.24},{x:.34,y:-.40,r:.18},{x:-.10,y:.35,r:.25},
+ {x:.53,y:.18,r:.17},{x:-.61,y:.24,r:.12},{x:.05,y:-.08,r:.11}
 ];
 function lunarCharacter(col:number,row:number){
  const x=(col-(width-1)/2)/((width-1)/2);
@@ -12,17 +12,19 @@ function lunarCharacter(col:number,row:number){
  const r2=x*x+y*y;
  if(r2>1)return " ";
  const z=Math.sqrt(1-r2);
- const noise=Math.sin(x*39+y*17)*Math.cos(y*34-x*19)*.10+Math.sin(x*82-y*67)*.045;
- let crater=0;
+ const texture=Math.sin(x*31+y*17)*Math.cos(y*28-x*23)*.09+Math.sin(x*73-y*49)*.035;
+ let shade=z*.7-x*.26+texture+.17;
+ let craterMark="";
  for(const c of craters){
   const d=Math.hypot(x-c.x,y-c.y);
-  const rim=Math.exp(-Math.pow((d-c.r)/.035,2))*.22;
-  const basin=d<c.r?-.21*(1-d/c.r):0;
-  crater+=rim+basin;
+  const delta=d-c.r;
+  if(Math.abs(delta)<.055){craterMark=delta<0?"@":"#";break}
+  if(d<c.r*.75){shade-=.54;craterMark=d<c.r*.44?":":"."}
+  else if(d<c.r){shade-=.33;craterMark="o"}
  }
- const light=Math.max(0,(z*.84-x*.46+y*.10)+noise+crater);
- const shade=Math.min(glyphs.length-1,Math.max(1,Math.floor(light*(glyphs.length-1)*.88)));
- return glyphs[shade];
+ if(craterMark)return craterMark;
+ const idx=Math.max(1,Math.min(glyphs.length-1,Math.floor(shade*(glyphs.length-1)*.9)));
+ return glyphs[idx];
 }
 const lunarArt=Array.from({length:height},(_,row)=>Array.from({length:width},(_,col)=>lunarCharacter(col,row)).join("")).join("\n");
 export default function AsciiMoon(){

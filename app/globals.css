@@ -539,3 +539,8 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 @keyframes ascii-moon-light{0%{transform:translateX(-18%)}100%{transform:translateX(16%)}}
 @media(max-width:850px){.home-ascii-moon{right:3%;top:4%;opacity:.5;transform:scale(.8);transform-origin:top right}}
 @media(prefers-reduced-motion:reduce){.home-ascii-moon,.home-ascii-moon::after{animation:none}}
+
+/* V75: crisp lunar glyphs and carved crater rims; remove the detached halo and artificial dark overlay. */
+.home-ascii-moon{filter:none;opacity:.92}
+.home-ascii-moon pre{text-shadow:none;color:#b9c8d9}
+.home-ascii-moon::after{content:none;display:none;animation:none}

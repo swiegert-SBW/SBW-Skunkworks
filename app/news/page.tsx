@@ -2,8 +2,8 @@
 import {useEffect,useState} from "react";
 type Watchlist={id:string;name:string;tickers:string[]};
 type Story={title:string;url:string;source:string;published:string;description:string};
-type Event={time:string;name:string;actual:string;previous:string;consensus:string;impact:string};
-type Payload={market:Story[];companies:Story[];upcoming:Event[];updatedAt:string;watchlistSymbolsSearched:string[]};
+type CalendarEvent={time:string;name:string;actual:string;previous:string;consensus:string;impact:string};
+type Payload={market:Story[];companies:Story[];upcoming:CalendarEvent[];updatedAt:string;watchlistSymbolsSearched:string[]};
 const KEY="sbw-workstation-watchlists-v1",SELECTED="sbw-selected-watchlist-id";
 const fmt=(s:string)=>{try{return new Date(s).toLocaleString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET"}catch{return s}};
 export default function NewsPage(){

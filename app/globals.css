@@ -442,3 +442,11 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 /* V57: featured hovered stock and sector boundary contrast */
 .heat-sector-row.heat-sector-active{background:#415875!important;box-shadow:inset 4px 0 #f5f8ff,inset 0 0 0 1px #b5d2f1;color:#fff;padding-top:11px;padding-bottom:11px}
 .heat-sector-row.heat-sector-active strong{color:#fff;font-size:13px}
+
+/* V60: stable sector comparison rail; never overlaps stock tiles. */
+.heat-workspace{display:flex;align-items:stretch;gap:8px;min-width:0}
+.heat-workspace .heat-frame{flex:1;min-width:0}
+.heat-sector-panel.heat-sector-docked{position:relative;top:auto;left:auto;right:auto;bottom:auto;transform:none;flex:0 0 285px;width:285px;max-width:285px;max-height:780px;min-height:350px;pointer-events:auto;box-shadow:none;display:flex;flex-direction:column}
+.heat-sector-docked .heat-sector-rows{flex:1;min-height:0;max-height:none;overflow-y:auto;pointer-events:auto}
+.heat-sector-idle{padding:18px 14px;color:#afc3d8;font-size:12px}
+@media(max-width:850px){.heat-workspace{flex-direction:column}.heat-sector-panel.heat-sector-docked{flex-basis:auto;width:100%;max-width:none;min-height:120px;max-height:300px}.heat-sector-docked .heat-sector-rows{max-height:210px}}

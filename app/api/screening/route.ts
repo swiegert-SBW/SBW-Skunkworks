@@ -1,39 +1,16 @@
-import {NextRequest,NextResponse} from "next/server";
+import {NextResponse} from "next/server";
 export const runtime="nodejs";
-const HOST="https://api.massive.com";
-const METRICS=["market_cap","price_to_earnings","price_to_book","price_to_sales","price_to_cash_flow","price_to_free_cash_flow","ev_to_ebitda","ev_to_sales","dividend_yield","return_on_assets","return_on_equity","debt_to_equity","current","quick","average_volume","price","free_cash_flow","earnings_per_share"] as const;
-const LIMIT=500;
-export async function GET(req:NextRequest){
- const key=process.env.MASSIVE_API_KEY||process.env.POLYGON_API_KEY;
- if(!key)return NextResponse.json({error:"MASSIVE_API_KEY is not configured in the Vercel project's environment variables.",code:"missing_key"},{status:503});
- const p=req.nextUrl.searchParams,mode=p.get("mode")==="reference"?"reference":"ratios";
- const params=new URLSearchParams({apiKey:key,limit:String(LIMIT)});
- const ticker=(p.get("ticker")||"").toUpperCase().trim();
- if(ticker&&!/^[A-Z0-9.\-]{1,12}$/.test(ticker))return NextResponse.json({error:"Invalid ticker"},{status:400});
- let endpoint="";
- if(mode==="ratios"){
-  endpoint="/stocks/financials/v1/ratios";params.set("sort","ticker.asc");
-  if(ticker)params.set("ticker",ticker);
-  for(const field of METRICS){
-   for(const op of ["gte","lte","gt","lt"]){
-    const v=p.get(field+"."+op);
-    if(v!==null&&v!==""&&Number.isFinite(Number(v)))params.set(field+"."+op,v);
-   }
-  }
- }else{
-  endpoint="/v3/reference/tickers";params.set("market","stocks");params.set("active","true");params.set("sort","ticker");params.set("order","asc");
-  if(ticker)params.set("ticker",ticker);
-  if(p.get("exchange"))params.set("exchange",p.get("exchange")!);
- }
- const cursor=p.get("cursor");
- if(cursor){if(cursor.length>2048)return NextResponse.json({error:"Invalid page cursor"},{status:400});params.set("cursor",cursor)}
+export const maxDuration=30;
+type R=Record<string,unknown>;
+const number=(x:unknown)=>{const s=String(x??"").replace(/[$,%\s]/g,"").replace(/,/g,"");if(!s||s==="--"||s==="N/A")return null;const suffix=s.slice(-1).toUpperCase(),n=Number(/[KMBT]$/.test(s)?s.slice(0,-1):s);if(!Number.isFinite(n))return null;return n*({K:1e3,M:1e6,B:1e9,T:1e12}[suffix]||1)};
+export async function GET(){
  try{
-  const res=await fetch(HOST+endpoint+"?"+params,{headers:{"Accept":"application/json"},next:{revalidate:900},signal:AbortSignal.timeout(16000)});
-  const json=await res.json().catch(()=>({}));
-  if(!res.ok)return NextResponse.json({error:res.status===403?"Massive denied access to this endpoint. Financials & Ratios may not be included in your plan.":res.status===429?"Massive API rate limit reached. Try again shortly.":String(json.error||json.message||"Massive API request failed"),code:res.status===403?"access_denied":"upstream_error",status:res.status},{status:res.status===429?429:502});
-  const next=String(json.next_url||"");
-  const nextCursor=next?new URL(next).searchParams.get("cursor"):null;
-  const results=Array.isArray(json.results)?json.results:[];
-  return NextResponse.json({mode,results,nextCursor,count:results.length,asOf:results[0]?.date||null,provider:"Massive",planNotice:mode==="ratios"?"Financials & Ratios access required":null},{headers:{"Cache-Control":"private, max-age=0"}});
- }catch{return NextResponse.json({error:"Could not reach Massive. Please try again."},{status:502})}
+  const url="https://api.nasdaq.com/api/screener/stocks?"+new URLSearchParams({tableonly:"true",limit:"6000",offset:"0"});
+  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com","Referer":"https://www.nasdaq.com/"},next:{revalidate:1800},signal:AbortSignal.timeout(18000)});
+  if(!r.ok)throw Error("Nasdaq source returned HTTP "+r.status);
+  const json=await r.json(),raw: R[]=json?.data?.table?.rows||[];
+  if(!Array.isArray(raw)||raw.length<100)throw Error("Nasdaq did not return a usable stock universe");
+  const results=raw.map(row=>({ticker:String(row.symbol||"").trim(),name:String(row.name||""),sector:String(row.sector||""),industry:String(row.industry||""),country:String(row.country||""),market_cap:number(row.marketCap),price:number(row.lastsale),change_percent:number(row.pctchange),change:number(row.netchange),volume:number(row.volume),ipo_date:String(row.ipoyear||""),exchange:String(row.exchange||""),raw:undefined})).filter(row=>/^[A-Z][A-Z0-9.\-]{0,11}$/.test(row.ticker));
+  return NextResponse.json({results,provider:"Nasdaq public stock screener",total:results.length,reportedTotal:Number(json?.data?.table?.asOf)||results.length,updatedAt:new Date().toISOString()},{headers:{"Cache-Control":"public, s-maxage=1800, stale-while-revalidate=3600"}});
+ }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Unable to load stock universe"},{status:502})}
 }

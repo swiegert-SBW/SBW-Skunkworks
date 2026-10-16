@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install pandas lxml html5lib
+      - run: pip install pandas lxml html5lib beautifulsoup4
       - run: python scripts/refresh-indices.py
       - name: Commit verified snapshots
         run: |

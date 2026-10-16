@@ -486,3 +486,12 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 
 /* V66: keep the exhaust trailing directly opposite the rocket nose. */
 .home-rocket-flame{transform:rotate(-44deg);transform-origin:right center}
+
+/* V67: exhaust shares the rocket rotation and aligns with the engine. */
+.home-rocket-flame{transform:none;transform-origin:center;position:relative;top:0;margin-right:-2px;height:6px;align-self:center}
+.home-rocket-body{display:inline-flex;align-items:center;line-height:1}
+/* Company names under ticker in sector table. */
+.heat-sector-stock-name{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.2}
+.heat-sector-stock-name strong{font-size:12px}
+.heat-sector-stock-name small{display:block;color:#9fb0c2;font-size:9px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.heat-sector-active .heat-sector-stock-name small{color:#d8e5f3}

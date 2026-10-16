@@ -429,3 +429,8 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .heat-sector-up{color:#50d68b;font-weight:600}.heat-sector-down{color:#ff6973;font-weight:600}
 .heat-sector-foot{padding:9px 12px;color:#afc3d8;font-size:11px;border-top:1px solid #465365;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:700px){.heat-sector-panel{top:auto;bottom:12px;right:12px;transform:none;width:245px}.heat-sector-rows{max-height:35vh}}
+
+/* Anchor sector quote table to its sector boundary rather than the viewport edge. */
+.heat-sector-panel{right:auto;bottom:auto;transform:translateY(-50%);pointer-events:none}
+.heat-sector-rows{pointer-events:none}
+@media(max-width:700px){.heat-sector-panel{right:auto;bottom:auto;transform:translateY(-50%);width:285px;max-width:calc(100vw - 16px)}}

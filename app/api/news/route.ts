@@ -11,7 +11,7 @@ async function feed(query:string,limit:number):Promise<Story[]>{
   const xml=await r.text();
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0,limit*3).map(m=>{
    const item=m[1],rawTitle=decode(tag(item,"title")),source=decode(tag(item,"source"))||"Google News";
-   return {title:rawTitle.replace(new RegExp(" - "+source.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"$"),""),url:decode(tag(item,"link")),source,published:decode(tag(item,"pubDate")),description:decode(tag(item,"description"))};
+   return {title:rawTitle.endsWith(" - "+source)?rawTitle.slice(0,-source.length-3):rawTitle,url:decode(tag(item,"link")),source,published:decode(tag(item,"pubDate")),description:decode(tag(item,"description"))};
   }).filter(x=>x.title&&x.url.startsWith("https://")).slice(0,limit);
  }catch{return []}
 }

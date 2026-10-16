@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 type Watchlist={id:string;name:string;tickers:string[]};
 type Tile={ticker:string;name:string;marketCap:number;change:number;price:number|null;quoteAvailable?:boolean};
 const KEY="sbw-workstation-watchlists-v1";
@@ -8,6 +8,7 @@ const clean=(s:string)=>s.trim().toUpperCase().replace(/\./g,"-");
 function fmt(v:number|null|undefined){return typeof v==="number"&&Number.isFinite(v)?v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}):"—"}
 export default function WatchlistTickerMarquee(){
  const[tiles,setTiles]=useState<Tile[]>([]);
+ const previousQuotes=useRef(new Map<string,Tile>());
  const[listName,setListName]=useState("");
  const[ready,setReady]=useState(false);
  useEffect(()=>{
@@ -21,21 +22,27 @@ export default function WatchlistTickerMarquee(){
     setListName(chosen?.name||"");
     const symbols=[...new Set((chosen?.tickers||[]).map(clean).filter(Boolean))].slice(0,300);
     if(!symbols.length){setTiles([]);setReady(true);return}
-    // Show symbols immediately, without waiting for remote quotes.
-    setTiles(previous=>symbols.map(ticker=>previous.find(t=>t.ticker===ticker)||{ticker,name:"",marketCap:0,change:0,price:null,quoteAvailable:false}));
     setReady(true);
-    const pages=Array.from({length:Math.ceil(symbols.length/25)},(_,i)=>symbols.slice(i*25,(i+1)*25));
-    void Promise.all(pages.map(async page=>{
-     const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.join(","),limit:"25"}));
-     if(!response.ok)throw Error("Quote data unavailable");
-     const data=await response.json();
-     return (data.tiles||[]) as Tile[];
-    })).then(groups=>{
-     if(!live||version!==request)return;
-     const quotes=new Map(groups.flat().map(t=>[t.ticker,t]));
-     setTiles(symbols.map(ticker=>quotes.get(ticker)||{ticker,name:"",marketCap:0,change:0,price:null,quoteAvailable:false}));
-    }).catch(()=>{ /* Keep the ticker symbols visible if quote requests fail. */ });
-   }catch{setTiles([]);setListName("");setReady(true)}
+    const cached=previousQuotes.current;
+    setTiles(symbols.map(ticker=>cached.get(ticker)).filter((t):t is Tile=>Boolean(t&&t.quoteAvailable&&t.price!==null&&t.name)));
+    const pages=Array.from({length:Math.ceil(symbols.length/20)},(_,i)=>symbols.slice(i*20,(i+1)*20));
+    void Promise.allSettled(pages.map(async(page,i)=>{
+     if(i)await new Promise(resolve=>window.setTimeout(resolve,i*350));
+     for(let attempt=0;attempt<2;attempt++){
+      try{
+       const response=await fetch("/api/heatmap?"+new URLSearchParams({index:"watchlist",period:"1d",tickers:page.join(","),limit:"20"}),{cache:"no-store"});
+       if(!response.ok)throw Error("Quote data unavailable");
+       const data=await response.json();
+       if(!live||version!==request)return;
+       for(const tile of (data.tiles||[]) as Tile[]){
+        if(tile.quoteAvailable&&typeof tile.price==="number"&&Number.isFinite(tile.price)&&tile.name&&tile.name!==tile.ticker)cached.set(tile.ticker,tile);
+       }
+       setTiles(symbols.map(ticker=>cached.get(ticker)).filter((t):t is Tile=>Boolean(t&&t.quoteAvailable&&t.price!==null&&t.name)));
+       return;
+      }catch{if(attempt===0)await new Promise(resolve=>window.setTimeout(resolve,1200));}
+     }
+    }));
+   }catch{setReady(true)}
   };
   read();
   window.addEventListener("storage",read);

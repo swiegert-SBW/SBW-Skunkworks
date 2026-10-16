@@ -495,3 +495,8 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .heat-sector-stock-name strong{font-size:12px}
 .heat-sector-stock-name small{display:block;color:#9fb0c2;font-size:9px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .heat-sector-active .heat-sector-stock-name small{color:#d8e5f3}
+
+/* V68: anchor the exhaust tip to the emoji engine and counter-rotate its trail to follow the horizontal flight direction. */
+.home-rocket{display:block;width:30px;height:30px}
+.home-rocket-body{position:absolute;left:0;top:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;line-height:1}
+.home-rocket-flame{position:absolute;top:69%;right:calc(100% - 9px);width:52px;height:6px;margin:0;transform:translateY(-50%) rotate(-28deg);transform-origin:right center;align-self:auto;clip-path:polygon(0 50%,100% 0,100% 100%)}

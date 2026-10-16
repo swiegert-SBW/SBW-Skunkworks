@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
  const index=p.get("index")||"sp500";
  const period=["1d","5d","1mo","3mo","1y"].includes(p.get("period")||"")?p.get("period")!:"1d";
  const offset=Math.max(0,Number.parseInt(p.get("offset")||"0",10)||0);
- const limit=Math.min(25,Math.max(1,Number.parseInt(p.get("limit")||"25",10)||25));
+ const limit=Math.min(index==="watchlist"?100:25,Math.max(1,Number.parseInt(p.get("limit")||"25",10)||25));
  let tickers=(index==="nasdaq100"?NAS:index==="dow30"?DOW:index==="russell2000"?RUS:SP).split(" ");
  let sourceNote="";
  if(["sp500","nasdaq100","russell2000"].includes(index)){
@@ -61,19 +61,27 @@ export async function GET(req: NextRequest) {
   const qr=await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+page.map(encodeURIComponent).join(","),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6000),next:{revalidate:300}});
   if(qr.ok){const qj=await qr.json();for(const q of qj?.quoteResponse?.result||[])quoteMap[q.symbol]=q;}
  }catch{}
- const tiles=await Promise.all(page.map(async ticker=>{
+ const sparkMap:Record<string,any>={};
+ try {
+  const sr=await fetch("https://query1.finance.yahoo.com/v7/finance/spark?"+new URLSearchParams({symbols:page.join(","),range:"5d",interval:"1d"}),{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(6500),next:{revalidate:300}});
+  if(sr.ok){const sj=await sr.json();for(const [symbol,value] of Object.entries(sj||{}))sparkMap[symbol]=value;}
+ }catch{}
+ const tiles:any[]=[];
+ for(let start=0;start<page.length;start+=10){
+ const chunk=await Promise.all(page.slice(start,start+10).map(async ticker=>{
   const q=quoteMap[ticker],info=INFO[ticker];
-  let d:any=null;
-  try {
+  let d:any=sparkMap[ticker]?.response?.[0]||sparkMap[ticker]?.chart?.result?.[0]||null;
+  if(!d&&!q)try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
    const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(4500),next:{revalidate:300}});
    if(r.ok)d=(await r.json())?.chart?.result?.[0];
   }catch{}
-  if(!d){
+  if(!d&&!q){
    try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(3500),next:{revalidate:300}});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
   }
-  const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice);
-  const prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose);
+  const sparkCloses=(d?.indicators?.quote?.[0]?.close||[]).filter((v:any)=>typeof v==="number"&&Number.isFinite(v));
+  const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice??sparkCloses[sparkCloses.length-1]);
+  const prev=Number(q?.regularMarketPreviousClose??d?.meta?.chartPreviousClose??d?.meta?.previousClose??sparkCloses[sparkCloses.length-2]);
   const closes=(d?.indicators?.quote?.[0]?.close||[]).filter((v:any)=>typeof v==="number"&&Number.isFinite(v));
   const base=period==="1d"?(prev||price):(closes[0]||price);
   const hasQuote=Number.isFinite(price)&&price>0&&Number.isFinite(base)&&base>0;
@@ -83,5 +91,7 @@ export async function GET(req: NextRequest) {
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
   return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
  }));
+ tiles.push(...chunk);
+ }
  return NextResponse.json({tiles,total,offset,updatedAt:new Date().toISOString(),note:sourceNote,missingQuotes:tiles.filter(t=>!t.quoteAvailable).length},{headers:{"Cache-Control":"public, s-maxage=900, stale-while-revalidate=1800"}});
 }

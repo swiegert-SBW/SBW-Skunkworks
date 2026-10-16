@@ -399,3 +399,9 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-calendar-table th{background:#192029;color:#b2bfcb}.news-calendar-table td:nth-child(n+3){font-variant-numeric:tabular-nums}
 .news-empty{padding:22px 4px;color:var(--muted)}.news-refresh{border:1px solid #405568;background:#172736;color:#b8e4ff;border-radius:4px;padding:7px 12px;cursor:pointer}
 @media(max-width:850px){.news-grid{grid-template-columns:1fr}.news-calendar{grid-column:1}.news-page{padding:12px}.news-box-header{flex-wrap:wrap}.news-calendar-table{font-size:11px}}
+
+/* Eight visible headlines per panel; scroll within each panel to see more. */
+.news-story-scroll{max-height:530px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#566777 #1b242e}
+.news-story-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.news-story-scroll .news-story{min-height:60px}
+.news-box-header .muted{font-size:10px}

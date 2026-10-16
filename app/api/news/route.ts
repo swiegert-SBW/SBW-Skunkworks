@@ -6,7 +6,7 @@ type CalendarItem={time:string;name:string;actual:string;previous:string;consens
 const decode=(s:string)=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim();
 const tag=(s:string,t:string)=>s.match(new RegExp("<"+t+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+t+">","i"))?.[1]||"";
 const ALLOWED=[/\bcnbc\b/i,/\bbarron['’]?s\b/i,/\bwall street journal\b/i,/\bwsj\b/i,/\bpr newswire\b/i,/\bbusiness wire\b/i,/\bglobenewswire\b/i,/\baccesswire\b/i,/\bnewsfile\b/i];
-const publisherQuery="(site:cnbc.com OR site:barrons.com OR site:wsj.com OR site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com OR site:accesswire.com OR site:newsfilecorp.com)";
+const publisherQuery="(site:cnbc.com OR site:barrons.com OR site:wsj.com OR site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com OR site:accesswire.com OR site:newsfilecorp.com OR site:fiercepharma.com OR site:firstwordpharma.com)";
 async function feed(query:string,limit:number):Promise<Story[]>{
  const url="https://news.google.com/rss/search?"+new URLSearchParams({q:query,hl:"en-US",gl:"US",ceid:"US:en"});
  try{
@@ -36,7 +36,7 @@ export async function GET(req:NextRequest){
    return (await feed("("+terms.join(" OR ")+") "+publisherQuery+" when:5d",40)).filter(s=>ALLOWED.some(rx=>rx.test(s.source)));
   })
  ]);
- const escaped=(s:string)=>s.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&");
+ const escaped=(s:string)=>s.replace(/[^a-zA-Z0-9 ]/g,"\\$&");
  const matches=(title:string,ticker:string,name:string)=>{
   const exact=(term:string)=>term.length>=2&&new RegExp("(^|[^A-Za-z0-9])"+escaped(term)+"(?=$|[^A-Za-z0-9])","i").test(title);
   if(name.length>=5&&exact(name))return 3;
@@ -53,7 +53,7 @@ export async function GET(req:NextRequest){
  const startDay=dateKey(now),endDay=dateKey(new Date(now.getTime()+7*86400000));
  const upcoming:CalendarItem[]=[];
  let calendarSource="Trading Economics public website",calendarStatus="unavailable";
- const clean=(s:string)=>decode(s.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,"").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,"")).replace(/&nbsp;|&#160;/g," ").trim();
+ const clean=(s:string)=>decode(s.replace(/&nbsp;|&#160;/g," ").trim());
  const field=(row:string,part:string)=>{const cells=[...row.matchAll(/<td\\b([^>]*)>([\\s\\S]*?)<\\/td>/gi)];const cell=cells.find(m=>m[1].includes(part));return cell?clean(cell[2]):""};
  try{
   const url="https://tradingeconomics.com/calendar?"+new URLSearchParams({country:"united states",importance:"1,2,3"});

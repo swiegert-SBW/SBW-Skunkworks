@@ -561,3 +561,13 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-benz-header .news-benz-status{text-align:right}
 .news-benz-paragraph{line-height:1.75;margin:0;max-width:1000px}
 @media(max-width:720px){.news-benz-header{grid-template-columns:1fr auto}.news-benz-header-quote{grid-column:1/-1;grid-row:2;justify-content:flex-start}.news-benz-header .news-benz-status{grid-column:2;grid-row:1}}
+
+/* V80: wider, single-line quote label and quote; wrap gracefully on narrow screens. */
+.news-benz-header{grid-template-columns:minmax(160px,1fr) minmax(310px,2.2fr) minmax(70px,.7fr)}
+.news-benz-header-quote .news-benz-quote{display:flex;align-items:center;justify-content:center;gap:9px;max-width:none;width:100%;text-align:left;flex-wrap:wrap}
+.news-benz-header-quote .news-benz-quote-label{flex-shrink:0;white-space:nowrap}
+.news-benz-header-quote .news-benz-quote blockquote{display:inline;margin:0;font-size:13px}
+.home-ascii-moon{animation:ascii-moon-drift 40s ease-in-out infinite;filter:none}
+.home-ascii-moon pre{font:600 4.1px/4.5px "Courier New",monospace;letter-spacing:0;color:#c7d2e0;text-shadow:none}
+.home-ascii-moon::after{display:none!important}
+@media(max-width:720px){.news-benz-header{grid-template-columns:1fr auto}}

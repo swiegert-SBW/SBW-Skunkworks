@@ -8,7 +8,8 @@ function change(chart:ChartResult|undefined):number|null{
  if(!chart)return null;
  const closes=(chart.indicators?.quote?.[0]?.close||[]).filter(valid);
  const price=chart.meta?.regularMarketPrice??closes[closes.length-1];
- const prev=chart.meta?.chartPreviousClose??chart.meta?.regularMarketPreviousClose??chart.meta?.previousClose??closes[closes.length-2];
+ // chartPreviousClose is the close BEFORE the chart range (5 days here), not yesterday.
+ const prev=chart.meta?.regularMarketPreviousClose??chart.meta?.previousClose??closes[closes.length-2];
  return valid(price)&&valid(prev)?(price/prev-1)*100:null;
 }
 async function chartQuote(symbol:string):Promise<number|null>{

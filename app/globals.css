@@ -500,3 +500,6 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .home-rocket{display:block;width:30px;height:30px}
 .home-rocket-body{position:absolute;left:0;top:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;line-height:1}
 .home-rocket-flame{position:absolute;top:69%;right:calc(100% - 9px);width:52px;height:6px;margin:0;transform:translateY(-50%) rotate(-28deg);transform-origin:right center;align-self:auto;clip-path:polygon(0 50%,100% 0,100% 100%)}
+
+/* V69: small exhaust alignment adjustment. */
+.home-rocket-flame{transform:translateY(-50%) rotate(-23deg)}

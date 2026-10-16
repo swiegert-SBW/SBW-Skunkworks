@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 // NASA LRO near-side lunar imagery, NASA/GSFC/ASU:
 // https://science.nasa.gov/resource/lunar-near-side/
 // The phase is approximate; the dark side remains visible as subdued earthshine.
@@ -20,14 +20,45 @@ function shadowPath(phase:number){
 }
 export default function AsciiMoon(){
  const [phase,setPhase]=useState<number|null>(null);
+ const [soundOn,setSoundOn]=useState(false);
+ const audioRef=useRef<AudioContext|null>(null);
  useEffect(()=>{const update=()=>setPhase(lunarPhase(new Date()));update();const id=window.setInterval(update,3600000);return()=>window.clearInterval(id)},[]);
  const path=useMemo(()=>phase===null?"":shadowPath(phase),[phase]);
- return <div className="home-lunar-scene" aria-hidden="true">
-  <div className="home-ascii-moon home-photo-moon" title="NASA lunar near-side imagery with approximate current phase">
+ useEffect(()=>{
+  if(!soundOn||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const play=()=>{
+   if(document.hidden)return;
+   const ctx=audioRef.current;
+   if(!ctx||ctx.state!=="running")return;
+   const seconds=1.3;
+   const count=Math.floor(ctx.sampleRate*seconds);
+   const buffer=ctx.createBuffer(1,count,ctx.sampleRate);
+   const channel=buffer.getChannelData(0);
+   for(let i=0;i<count;i++){
+    const t=i/ctx.sampleRate;
+    channel[i]=(Math.random()*2-1)*Math.exp(-t*4.5);
+   }
+   const noise=ctx.createBufferSource();noise.buffer=buffer;
+   const filter=ctx.createBiquadFilter();filter.type="lowpass";filter.frequency.setValueAtTime(1000,ctx.currentTime);filter.frequency.exponentialRampToValueAtTime(90,ctx.currentTime+seconds);
+   const gain=ctx.createGain();gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.26,ctx.currentTime+.03);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+seconds);
+   noise.connect(filter);filter.connect(gain);gain.connect(ctx.destination);noise.start();noise.stop(ctx.currentTime+seconds);
+  };
+  // Blast is at 82.4% of each 180-second CSS animation cycle.
+  const first=window.setTimeout(()=>{play();const repeating=window.setInterval(play,180000);intervalRef.current=repeating},148320);
+  const intervalRef:{current:ReturnType<typeof setInterval>|null}={current:null};
+  return()=>{window.clearTimeout(first);if(intervalRef.current)window.clearInterval(intervalRef.current)};
+ },[soundOn]);
+ useEffect(()=>()=>{if(audioRef.current)void audioRef.current.close()},[]);
+ const toggleSound=async()=>{
+  if(soundOn){setSoundOn(false);return}
+  try{const ctx=audioRef.current||new AudioContext();audioRef.current=ctx;await ctx.resume();setSoundOn(true)}catch{setSoundOn(false)}
+ };
+ return <div className="home-lunar-scene">
+  <div className="home-ascii-moon home-photo-moon" aria-hidden="true" title="NASA lunar near-side imagery with approximate current phase">
    <div className="home-photo-moon-disc" style={{backgroundImage:'url("'+image+'")'}} />
    {path&&<svg className="home-photo-moon-shadow" viewBox="0 0 200 200" preserveAspectRatio="none"><path d={path} fill="#050a13" fillOpacity=".82"/></svg>}
   </div>
-  <div className="home-death-star">
+  <div className="home-death-star" aria-hidden="true">
    <svg viewBox="0 0 120 120" role="presentation" focusable="false">
     <defs><radialGradient id="death-star-shell" cx="30%" cy="25%" r="85%"><stop offset="0" stopColor="#adb8c4"/><stop offset=".58" stopColor="#667380"/><stop offset="1" stopColor="#1c2938"/></radialGradient><clipPath id="death-star-disc"><circle cx="60" cy="60" r="56"/></clipPath></defs>
     <circle cx="60" cy="60" r="56" fill="url(#death-star-shell)" stroke="#9faab4" strokeWidth="1"/>
@@ -41,9 +72,10 @@ export default function AsciiMoon(){
     <circle cx="79" cy="40" r="4" fill="#a8b8ba"/>
    </svg>
    <div className="home-death-star-charge"/>
-   <div className="home-death-star-beam"/>
   </div>
-  <div className="home-moon-blast"/>
-  <div className="home-moon-debris">{Array.from({length:9},(_,i)=><span key={i} className={`home-moon-fragment home-moon-fragment-${i+1}`} style={{backgroundImage:'url("'+image+'")'}}/>)}</div>
+  <div className="home-death-star-beam" aria-hidden="true"/>
+  <div className="home-moon-blast" aria-hidden="true"/>
+  <div className="home-moon-debris" aria-hidden="true">{Array.from({length:9},(_,i)=><span key={i} className={`home-moon-fragment home-moon-fragment-${i+1}`} style={{backgroundImage:'url("'+image+'")'}}/>)}</div>
+  <button type="button" className="home-explosion-sound" onClick={toggleSound} aria-pressed={soundOn} title="Browsers require a click to enable sound effects">{soundOn?"🔊 Explosion sound on":"🔇 Enable explosion sound"}</button>
  </div>;
 }

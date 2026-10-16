@@ -619,3 +619,11 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 @keyframes home-moon-piece{0%,82.4%{transform:translate(0,0) rotate(0)}90%,100%{transform:translate(var(--fx),var(--fy)) rotate(var(--fr))}}
 @media(max-width:850px){.home-lunar-scene .home-photo-moon{top:6%;right:3%;width:115px;height:115px}.home-death-star{width:75px;height:75px;top:8%;right:34%}.home-moon-debris{top:6%;right:3%;transform:scale(.73);transform-origin:top right}.home-moon-blast{top:7%;right:5%}}
 @media(prefers-reduced-motion:reduce){.home-lunar-scene .home-photo-moon{animation:none;opacity:.73}.home-death-star,.home-moon-blast,.home-moon-debris{display:none}}
+
+/* V85: keep the Death Star farther away, align a finite beam to the lunar center. */
+.home-death-star{top:calc(10% + 38px);right:clamp(390px,40vw,680px)}
+.home-death-star-beam{position:absolute;top:calc(10% + 77px);left:auto;right:calc(clamp(20px,7vw,130px) + 79px);width:calc(clamp(390px,40vw,680px) - clamp(20px,7vw,130px) - 52px);height:5px;transform-origin:left center;transform:scaleX(0);opacity:0;animation:home-death-star-laser var(--lunar-cycle) linear infinite;background:linear-gradient(90deg,#caffd1,#58ff72);box-shadow:0 0 9px 3px #42ff6d,0 0 18px 5px #2af24e;border-radius:5px}
+.home-explosion-sound{position:absolute;right:14px;bottom:14px;z-index:2;pointer-events:auto;background:#15273bd9;border:1px solid #436080;border-radius:7px;padding:5px 9px;color:#a9c7df;font-size:11px;cursor:pointer}
+.home-explosion-sound:hover{background:#29455f;color:#fff}
+@media(max-width:850px){.home-death-star{top:calc(6% + 30px);right:clamp(220px,48vw,390px)}.home-death-star-beam{top:calc(6% + 57px);right:calc(3% + 57px);width:calc(clamp(220px,48vw,390px) - 3% - 38px)}}
+@media(prefers-reduced-motion:reduce){.home-death-star-beam,.home-explosion-sound{display:none}}

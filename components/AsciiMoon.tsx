@@ -49,12 +49,12 @@ export default function AsciiMoon(){
   let lastCycle=-1;
   const sync=()=>{
    if(document.hidden)return;
-   const animation=blastRef.current?.getAnimations().find(a=>(a.effect as KeyframeEffect|null)?.getTiming().duration===180000);
+   const animation=blastRef.current?.getAnimations().find(a=>(a.effect as KeyframeEffect|null)?.getTiming().duration===30000);
    if(!animation)return;
    const time=Number(animation.currentTime);
    if(!Number.isFinite(time))return;
-   const cycle=Math.floor(time/180000);
-   const progress=(time%180000)/180000;
+   const cycle=Math.floor(time/30000);
+   const progress=(time%30000)/30000;
    if(lastCycle<0){lastCycle=cycle;return}
    if(progress>=.823&&progress<.838&&lastCycle===cycle){
     lastCycle=cycle+1;
@@ -88,6 +88,7 @@ export default function AsciiMoon(){
     <ellipse cx="79" cy="40" rx="12" ry="10" fill="#586b72" stroke="#172733" strokeWidth="2"/>
     <circle cx="79" cy="40" r="4" fill="#a8b8ba"/>
    </svg>
+   <svg className="home-death-star-converge" viewBox="0 0 120 120" aria-hidden="true"><g stroke="#83ff9a" strokeWidth="1.1" strokeLinecap="round"><line x1="37" y1="16" x2="101" y2="60"/><line x1="28" y1="43" x2="101" y2="60"/><line x1="42" y1="89" x2="101" y2="60"/><line x1="76" y1="108" x2="101" y2="60"/><line x1="84" y1="10" x2="101" y2="60"/></g></svg>
    <div className="home-death-star-charge"/>
   </div>
   <div className="home-death-star-beam" aria-hidden="true"/>

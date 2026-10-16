@@ -25,17 +25,16 @@ function extract(html:string):{date:string;entries:Entry[]}{
  return {date:dates.length?plain(dates[0][0]):"",entries};
 }
 function summary(entries:Entry[]):string{
- // Original, concise synopsis based on the recap's headline claims and numerical details.
- // Keep the facts but do not reproduce the publisher's commentary verbatim.
- return entries.map(({heading,detail})=>{
-  const sentences=detail.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[detail];
-  const first=sentences[0]?.trim()||"";
-  const numbers=sentences.slice(1).filter(s=>/\b\d+(?:\.\d+)?%|\b\d+-year\b|\$\d+/i.test(s)).slice(0,1);
-  const facts=[first,...numbers].map(s=>s.trim().replace(/[.!?]+$/,"")).filter(Boolean);
-  const short=facts.join("; ").slice(0,330).replace(/\s+\S*$/,"");
-  return heading.replace(/[.!?]+$/,"")+": "+short+".";
+ // Preserve decimals, complete sentences, and the publisher's numerical context.
+ return entries.slice(0,3).map(({heading,detail})=>{
+  const title=heading.replace(/[.!?:;]+$/,"").trim();
+  const sentences=detail.replace(/\s+/g," ").trim().split(/(?<=[.!?])\s+(?=[A-Z“])/).filter(s=>s.length>25);
+  const first=sentences[0]||detail;
+  const additional=sentences.slice(1).find(s=>/\d+(?:\.\d+)?%|\$\d|Treasury|earnings estimates|industrial production/i.test(s));
+  return title+". "+[first,additional].filter(Boolean).map(s=>s.trim()).join(" ");
  }).join(" ");
 }
+
 export async function GET(){
  try{
   const r=await fetch(SOURCE,{headers:{"User-Agent":"Mozilla/5.0","Accept":"text/html"},next:{revalidate:1800},signal:AbortSignal.timeout(12000)});

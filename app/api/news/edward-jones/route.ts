@@ -1,27 +1,47 @@
 import {NextResponse} from "next/server";
 export const runtime="nodejs";
-const source="https://www.edwardjones.com/us-en/market-news-insights/stock-market-news/daily-market-recap";
-const decode=(s:string)=>s.replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&rsquo;|&#8217;/gi,"’").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n))).replace(/\s+/g," ").trim();
-const strip=(s:string)=>decode(s.replace(/<[^>]+>/g," "));
-const categories=[
- ["equity-market performance",/stocks|equities|s&p|nasdaq|dow|market|index|indices/i],
- ["the economy and Federal Reserve policy",/econom|fed|inflation|interest rate|jobs|labor|gdp|consumer|treasury/i],
- ["corporate earnings and outlooks",/earnings|profit|revenue|guidance|corporat|quarter/i],
- ["global developments",/global|international|trade|tariff|china|europe|oil|geopolit/i],
- ["bonds and interest rates",/bond|yield|fixed income|treasur|rate/i]
-] as const;
+const SOURCE="https://www.edwardjones.com/us-en/market-news-insights/stock-market-news/daily-market-recap";
+const decode=(s:string)=>s.replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&rsquo;|&#8217;/gi,"’").replace(/&ndash;|&#8211;/gi,"–").replace(/&mdash;|&#8212;/gi,"—").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n))).replace(/\s+/g," ").trim();
+const plain=(s:string)=>decode(s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," "));
+type Entry={heading:string;detail:string};
+function extract(html:string):{date:string;entries:Entry[]}{
+ const dates=[...html.matchAll(/(?:Monday|Tuesday|Wednesday|Thursday|Friday),?\s*(?:<[^>]+>\s*)*\d{1,2}\/\d{1,2}\/20\d{2}\s*(?:a\.?m\.?|p\.?m\.?)/gi)];
+ const start=dates.length?dates[0].index||0:0;
+ const section=html.slice(start,start+45000);
+ const entries:Entry[]=[];
+ for(const match of section.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)){
+  const item=match[1];const text=plain(item);
+  if(text.length<140||text.length>2200)continue;
+  const strong=item.match(/<(?:strong|b)\b[^>]*>([\s\S]*?)<\/(?:strong|b)>/i);
+  let heading=strong?plain(strong[1]):"";
+  if(!heading){heading=text.split(/\s+[–—-]\s+/)[0]||""}
+  if(heading.length<15||heading.length>160||!text.toLowerCase().includes(heading.toLowerCase().slice(0,12)))continue;
+  const detail=text.slice(text.indexOf(heading)+heading.length).replace(/^[\s–—:-]+/,"").trim();
+  if(detail.length<90)continue;
+  if(entries.some(e=>e.heading===heading))continue;
+  entries.push({heading,detail});
+  if(entries.length>=3)break;
+ }
+ return {date:dates.length?plain(dates[0][0]):"",entries};
+}
+function summary(entries:Entry[]):string{
+ // Original, concise synopsis based on the recap's headline claims and numerical details.
+ // Keep the facts but do not reproduce the publisher's commentary verbatim.
+ return entries.map(({heading,detail})=>{
+  const sentences=detail.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[detail];
+  const first=sentences[0]?.trim()||"";
+  const numbers=sentences.slice(1).filter(s=>/\b\d+(?:\.\d+)?%|\b\d+-year\b|\$\d+/i.test(s)).slice(0,1);
+  const facts=[first,...numbers].map(s=>s.trim().replace(/[.!?]+$/,"")).filter(Boolean);
+  const short=facts.join("; ").slice(0,330).replace(/\s+\S*$/,"");
+  return heading.replace(/[.!?]+$/,"")+": "+short+".";
+ }).join(" ");
+}
 export async function GET(){
  try{
-  const response=await fetch(source,{headers:{"Accept":"text/html","User-Agent":"Mozilla/5.0"},next:{revalidate:3600},signal:AbortSignal.timeout(12000)});
-  if(!response.ok)return NextResponse.json({error:"Recap source unavailable"},{status:502});
-  const html=await response.text();
-  const main=html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]||html;
-  const text=strip(main.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," "));
-  if(!/market recap|market update|market news/i.test(text))return NextResponse.json({error:"Recap could not be identified"},{status:502});
-  const headings=[...main.matchAll(/<h[2-4]\b[^>]*>([\s\S]*?)<\/h[2-4]>/gi)].map(m=>strip(m[1])).filter(s=>s.length>15&&s.length<140&&!/subscribe|related|insight|contact|advisor|explore|share/i.test(s)).slice(0,12);
-  const matched=categories.filter(([,re])=>headings.some(h=>re.test(h))).map(([name])=>name);
-  if(!matched.length)return NextResponse.json({error:"No current recap sections found"},{status:502});
-  const summary="The latest Edward Jones daily market recap covers "+matched.slice(0,4).join(", ")+". Its analysis discusses the day's developments and what they may mean for investors. Read the full Edward Jones commentary for the underlying figures, market drivers, and context.";
-  return NextResponse.json({summary,url:source},{headers:{"Cache-Control":"public, s-maxage=3600, stale-while-revalidate=3600"}});
+  const r=await fetch(SOURCE,{headers:{"User-Agent":"Mozilla/5.0","Accept":"text/html"},next:{revalidate:1800},signal:AbortSignal.timeout(12000)});
+  if(!r.ok)return NextResponse.json({error:"Edward Jones unavailable"},{status:502});
+  const {date,entries}=extract(await r.text());
+  if(entries.length<2)return NextResponse.json({error:"Could not identify the latest recap bullet points"},{status:502});
+  return NextResponse.json({summary:summary(entries),date,url:SOURCE},{headers:{"Cache-Control":"public, s-maxage=1800, stale-while-revalidate=1800"}});
  }catch{return NextResponse.json({error:"Recap retrieval failed"},{status:502})}
 }

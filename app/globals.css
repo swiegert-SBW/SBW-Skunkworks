@@ -579,3 +579,12 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .home-photo-moon pre{display:none}
 @media(max-width:850px){.home-photo-moon{width:115px;height:115px;top:6%;right:3%}}
 @media(prefers-reduced-motion:reduce){.home-photo-moon{animation:none}}
+
+/* V83: M.A.R.K. brand and slower, synchronized orbiting satellites. */
+.home-orbit-track,.home-orbit-track-two{animation-duration:24s}
+.home-orbit-track-two{animation-delay:-12s}
+.news-mark-brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.news-benz-brand .news-mark-brand h2{font-size:23px;font-weight:850;letter-spacing:.04em;white-space:nowrap;line-height:1.15}
+.news-benz-brand .news-mark-brand small{font-size:10px;line-height:1.35;max-width:170px;margin:0;color:#a5c2db}
+@media(max-width:1000px){.news-benz-header{grid-template-columns:minmax(230px,1.2fr) minmax(220px,1.6fr) auto}.news-mark-brand{gap:7px}}
+@media(max-width:720px){.news-benz-header{grid-template-columns:1fr auto}}

@@ -552,3 +552,12 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-benz-quote:after{content:"";position:absolute;left:22px;bottom:-9px;width:15px;height:15px;background:#24394e;border-right:1px solid #54738f;border-bottom:1px solid #54738f;transform:rotate(45deg)}
 .news-benz-quote-label{font-size:10px;color:#a9cbe9;text-transform:uppercase;letter-spacing:.06em}
 .news-benz-quote blockquote{margin:6px 0 0;color:#f0f7ff;font-size:15px;font-style:italic;line-height:1.45}
+
+/* V79: centered header quote bubble, compact prose digest. */
+.news-benz-header{display:grid;grid-template-columns:minmax(170px,1fr) minmax(190px,1.4fr) minmax(90px,1fr);gap:14px;align-items:center}
+.news-benz-header-quote{display:flex;justify-content:center;min-width:0}
+.news-benz-header-quote .news-benz-quote{margin:0;max-width:100%;padding:8px 14px 10px;text-align:center}
+.news-benz-header-quote .news-benz-quote blockquote{font-size:12px;line-height:1.35;margin-top:3px}
+.news-benz-header .news-benz-status{text-align:right}
+.news-benz-paragraph{line-height:1.75;margin:0;max-width:1000px}
+@media(max-width:720px){.news-benz-header{grid-template-columns:1fr auto}.news-benz-header-quote{grid-column:1/-1;grid-row:2;justify-content:flex-start}.news-benz-header .news-benz-status{grid-column:2;grid-row:1}}

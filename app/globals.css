@@ -503,3 +503,6 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 
 /* V69: small exhaust alignment adjustment. */
 .home-rocket-flame{transform:translateY(-50%) rotate(-23deg)}
+
+/* V70: exhaust emerges from the rocket engine and points backward along its upward-right trajectory. The rocket wrapper rotates 28deg; the trail counter-rotates 40deg, yielding a 12deg upward-right screen direction. */
+.home-rocket-flame{top:75%;right:calc(100% - 7px);transform:rotate(-40deg);transform-origin:right center}

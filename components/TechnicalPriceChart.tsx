@@ -20,7 +20,7 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  const closes=useMemo(()=>points.map(p=>p.c),[points]),s20=useMemo(()=>sma(closes,20),[closes]),s50=useMemo(()=>sma(closes,50),[closes]),rs=useMemo(()=>rsi(closes),[closes]);
  const w=1200,h=300,left=18,right=95,top=18,bottom=30,chartBottom=h-bottom;
  const colors=["#54a6ff","#f5b544","#c494ff"];
- const aligned=useMemo(()=>compared.map((t,j)=>{const source=comparisons[t]||[];const exact=new Map(source.map(p=>[p.t,p.c]));const daily=new Map(source.map(p=>[dateKey(p.t),p.c]));const values=points.map(p=>exact.get(p.t)??daily.get(dateKey(p.t))??null);const first=values.find(v=>v!==null);return {ticker:t,color:colors[j%colors.length],values:values.map(v=>v===null||first===null||!first?null:(v/first-1)*100)}}),[compared,comparisons,points,closes]);
+ const aligned=useMemo(()=>compared.map((t,j)=>{const source=comparisons[t]||[];const exact=new Map(source.map(p=>[p.t,p.c]));const daily=new Map(source.map(p=>[dateKey(p.t),p.c]));const values=points.map(p=>exact.get(p.t)??daily.get(dateKey(p.t))??null);const firstIndex=values.findIndex(v=>v!==null);const first=firstIndex>=0?values[firstIndex]:null;const base=points[firstIndex]?.c;return {ticker:t,color:colors[j%colors.length],values:values.map((v,i)=>v===null||first===null||!first||!base||i<firstIndex?null:(v/first-1)*100),start:firstIndex}}),[compared,comparisons,points,closes]);
  const comparing=compared.length>0,baseClose=closes[0]||1;
  const referenceValues=comparing?closes.map(v=>(v/baseClose-1)*100):closes;
  const plottedS20=comparing?s20.map(v=>v===null?null:(v/baseClose-1)*100):s20;

@@ -667,3 +667,10 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 @keyframes home-laser-rays-v90{0%,77%{stroke-dashoffset:18}80.8%,100%{stroke-dashoffset:0}}
 .home-explosion-sound{display:none!important}
 @media(max-width:850px){.home-death-star-beam{left:calc(10px + 49px);top:calc(6% + 55px)}}
+
+/* Full-width, structured Edward Jones market briefing */
+.news-benz-body .news-benz-paragraph{max-width:none;width:100%}
+.news-benz-list{margin:0;padding-left:23px;width:100%;max-width:none;box-sizing:border-box;list-style:disc}
+.news-benz-list li{padding-left:3px;margin:0 0 14px;line-height:1.75}
+.news-benz-list li:last-child{margin-bottom:0}
+.news-benz-list strong{font-weight:750;color:#f0f6ff}

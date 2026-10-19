@@ -1,6 +1,7 @@
 import { lookupTicker, getSubmissions } from "@/lib/sec";
 import BusinessDescription from "@/components/BusinessDescription";
-import { getFundamentals } from "@/lib/data";
+import { Suspense } from "react";
+import SnapshotFundamentals from "@/components/SnapshotFundamentals";
 import { getChart } from "@/lib/market";
 import { money } from "@/lib/format";
 import PerformanceChart from "@/components/PerformanceChart";
@@ -13,16 +14,15 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
   const { ticker } = await params;
   const co = await lookupTicker(ticker);
   if (!co) notFound();
-  const [subs, fund, stock, spx] = await Promise.all([
+  const [subs, stock, spx] = await Promise.all([
     getSubmissions(co.cik),
-    getFundamentals(co.cik).catch(() => null),
     getChart(co.ticker, "1y"),
     getChart("^GSPC", "1y"),
   ]);
   const a = subs.addresses?.business ?? {};
   const change = stock ? stock.price - stock.prevClose : 0;
   const changePct = stock ? (change / stock.prevClose) * 100 : 0;
-  const mcap = stock && fund?.sharesOutstanding ? stock.price * fund.sharesOutstanding : null;
+
   // Do not block the security snapshot on third-party WACC pages or a second SEC facts pass.
   const extra={enterpriseValue:null as number|null},wacc=null as {value:number;source:string}|null;
   const recent = subs.filings.recent;
@@ -32,14 +32,14 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
   const stats: [string, string][] = [
     ["Ticker", co.ticker],
     ["Price", stock ? `${stock.price.toFixed(2)}` : "n/a"],
-    ["Market Cap", mcap ? money(mcap) : "n/a"],
+
     ["Open", typeof stock?.open==="number"?stock.open.toFixed(2):"N/A"],
     ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
     ["Volume", stock ? stock.volume?.toLocaleString("en-US") : "n/a"],
-    ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],
+
     ["Enterprise Value",extra.enterpriseValue!==null?money(extra.enterpriseValue):"N/A"],
-    ["Annual Revenue", fund?.revenue ? money(fund.revenue.value) : "n/a"],
+
     ["Float", "N/A"],
     ["Short Interest", "N/A"],
     ["WACC",wacc?`${wacc.value.toFixed(2)}% (${wacc.source})`:"N/A"],
@@ -84,6 +84,7 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
           <dl className="stats">
             {stats.map(([l, v]) => (<div key={l}><dt>{l}</dt><dd>{v}</dd></div>))}
           </dl>
+          <Suspense fallback={<p className="muted small">Loading SEC fundamentals…</p>}><SnapshotFundamentals cik={co.cik} price={stock?.price??null}/></Suspense>
         </div>
       </div>
     </div>

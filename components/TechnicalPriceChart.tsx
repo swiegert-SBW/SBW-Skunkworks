@@ -38,17 +38,17 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
   {!loading&&points.length>1&&<div className="technical-plot">
    <svg ref={svg} viewBox={`0 0 ${w} ${h}`} onPointerMove={onMove} onPointerLeave={()=>setHover(null)} role="img" aria-label={ticker+" historical prices"}>
     {[0,1,2,3,4,5].map(i=>{const v=min+(max-min)*i/5;return <g key={i}><line x1={left} x2={w-right} y1={y(v)} y2={y(v)} stroke="#303a45"/><text x={w-right+12} y={y(v)+4} fill="#aebdce" fontSize="13">{fmt(v)}</text></g>})}
-    <path d={path(closes)} stroke="#51a5ff" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
+    <path d={path(closes)} stroke="#42c96d" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
     {ma20&&<path d={path(s20)} stroke="#f7b54c" strokeWidth="2" fill="none"/>}{ma50&&<path d={path(s50)} stroke="#bf9bff" strokeWidth="2" fill="none"/>}
     {aligned.map(a=><path key={a.ticker} d={path(a.values)} stroke={a.color} strokeWidth="2" fill="none"/>)}
     {[0,1,2,3,4,5].map(i=>{const idx=Math.round(i*(points.length-1)/5);return <text key={i} x={x(idx)} y={h-9} textAnchor="middle" fontSize="12" fill="#aebdce">{range==="1D"||range==="5D"?new Date(points[idx].t*1000).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",timeZone:"America/New_York"}):new Date(points[idx].t*1000).toLocaleDateString("en-US",{month:"short",year:"2-digit",timeZone:"UTC"})}</text>})}
-    {hover!==null&&<><line x1={x(hover)} x2={x(hover)} y1={top} y2={chartBottom} stroke="#aab8c9" strokeDasharray="4 5"/><circle cx={x(hover)} cy={y(closes[hover])} r="5" fill="#51a5ff" stroke="#101820" strokeWidth="2"/></>}
+    {hover!==null&&<><line x1={x(hover)} x2={x(hover)} y1={top} y2={chartBottom} stroke="#aab8c9" strokeDasharray="4 5"/><circle cx={x(hover)} cy={y(closes[hover])} r="5" fill="#42c96d" stroke="#101820" strokeWidth="2"/></>}
    </svg>
    {hover!==null&&<div className="technical-tooltip" style={{left:Math.min(78,Math.max(1,x(hover)/w*100))+"%",top:"9%"}}><strong>{new Date(points[hover].t*1000).toLocaleString("en-US",{dateStyle:"medium",timeStyle:range==="1D"||range==="5D"?"short":undefined})}</strong><div>{ticker}: {fmt(closes[hover])}</div>{ma20&&s20[hover]!==null&&<div>SMA20: {fmt(s20[hover]!)}</div>}{ma50&&s50[hover]!==null&&<div>SMA50: {fmt(s50[hover]!)}</div>}{aligned.map(a=><div key={a.ticker}>{a.ticker}: {a.values[hover]!==null?fmt(a.values[hover]!):"N/A"} (indexed)</div>)}</div>}
   </div>}
   {!loading&&showRsi&&points.length>1&&<div className="technical-rsi"><div className="technical-rsi-label">RSI (14) {rs.at(-1)?.toFixed(2)??"N/A"}</div><svg viewBox={`0 0 ${w} 150`} role="img" aria-label="Relative strength index" onPointerMove={e=>{const box=e.currentTarget.getBoundingClientRect();const px=(e.clientX-box.left)/box.width*w;setHover(Math.max(0,Math.min(points.length-1,Math.round((px-left)/(w-left-right)*(points.length-1)))));}} onPointerLeave={()=>setHover(null)}>
    {[30,50,70].map(v=><g key={v}><line x1={left} x2={w-right} y1={140-v*1.25} y2={140-v*1.25} stroke="#6d7884" strokeDasharray="5 5"/><text x={w-right+12} y={144-v*1.25} fill="#aebdce" fontSize="13">{v}</text></g>)}
-   {rs.map((v,i)=>{if(i===0||v===null||rs[i-1]===null)return null;const prior=rs[i-1]!;const color=v>70?"#fa4ca0":v<30?"#26d78c":"#d9e1ea";return <line key={i} x1={x(i-1)} y1={140-prior*1.25} x2={x(i)} y2={140-v*1.25} stroke={color} strokeWidth="2.3"/>})}
+   {rs.map((v,i)=>{if(i===0||v===null||rs[i-1]===null)return null;const prior=rs[i-1]!;const color=v>70?"#f06469":v<30?"#26d78c":"#d9e1ea";return <line key={i} x1={x(i-1)} y1={140-prior*1.25} x2={x(i)} y2={140-v*1.25} stroke={color} strokeWidth="2.3"/>})}
    {hover!==null&&<line x1={x(hover)} x2={x(hover)} y1="10" y2="140" stroke="#9ca9b7" strokeDasharray="4 5"/>}
   </svg>{hover!==null&&rs[hover]!==null&&<div className="technical-rsi-value">RSI: {rs[hover]!.toFixed(2)}</div>}</div>}
   <p className="muted small">Source: market price feed. RSI and moving averages are calculated on the selected interval. Comparisons are indexed to the selected stock's starting price. No volume displayed.</p>

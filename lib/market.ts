@@ -36,7 +36,7 @@ export async function getChart(symbol: string, range = "1y"): Promise<Chart | nu
       open: r.meta.regularMarketOpen ?? r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,
       firstTradeDate: r.meta.firstTradeDate,
       dividendRate: r.meta.trailingAnnualDividendRate ?? (r.events?.dividends ? (()=>{const dividends=Object.values(r.events.dividends) as {amount:number;date:number}[];const cutoff=Date.now()/1000-366*86400;const total=dividends.filter(d=>d.date>=cutoff).reduce((sum,d)=>sum+d.amount,0);return total>0?total:undefined})():undefined),
-      exDividendDate: r.meta.exDividendDate ?? (r.events?.dividends ? Math.max(...(Object.values(r.events.dividends) as {date:number}[]).map(d=>d.date)) : undefined),
+      exDividendDate: r.meta.exDividendDate ?? (r.events?.dividends ? (Object.values(r.events.dividends) as {date:number}[]).map(d=>d.date).sort((a,b)=>b-a)[0] : undefined),
       points,
     };
   } catch {

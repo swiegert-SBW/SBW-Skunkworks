@@ -12,7 +12,7 @@ export const NAV: NavSection[] = [
       ["capital-structure", "Capital Structure"], ["rbics-rev", "RBICS Rev"], ["geo-rev", "GeoRev"], ["reference", "Reference"], ["esg", "ESG"],
     ]),
   },
-  { id: "charts", label: "Charts", items: items([["price-chart", "Price Chart"]]) },
+  { id: "charts", label: "Charts", items: items([["price-chart", "Price Chart"], ["financial-chart", "Financial Charts"]]) },
   { id: "news", label: "News, Research, and Filings", items: items([["filings", "Filings"], ["news", "News"]]) },
   { id: "prices", label: "Prices", items: items([["historical", "Historical Prices"]]) },
   { id: "ownership", label: "Ownership", items: items([["institutions", "Institutions"], ["insiders", "Insiders"]]) },

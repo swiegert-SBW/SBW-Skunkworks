@@ -7,6 +7,7 @@ import TechnicalPriceChart from "@/components/TechnicalPriceChart";
 import {STATEMENTS} from "@/lib/statements";
 import StatementView from "@/components/StatementView";
 import FilingsView from "@/components/FilingsView";
+import CompanyNews from "@/components/CompanyNews";
 export default async function SubPage({params,searchParams}:{params:Promise<{ticker:string;section:string;sub:string}>;searchParams:Promise<{period?:string;range?:string}>}){
  const [{ticker,section:sectionId,sub},query]=await Promise.all([params,searchParams]);
  const section=NAV.find(s=>s.id===sectionId),item=section?.items.find(i=>i.id===sub);
@@ -15,6 +16,7 @@ export default async function SubPage({params,searchParams}:{params:Promise<{tic
  if(section.id==="charts"&&item.id==="price-chart")return <TechnicalPriceChart key={symbol} ticker={symbol}/>;
  if(section.id==="charts"&&item.id==="financial-chart")return <Suspense fallback={<div className="panel">Loading SEC financial data…</div>}><FinancialChartsData ticker={symbol}/></Suspense>;
  if(section.id==="financials"&&STATEMENTS[item.id])return <Suspense fallback={<div className="panel">Loading financial statement…</div>}><StatementData ticker={symbol} sub={item.id} period={query.period==="annual"?"annual":"quarterly"} range={query.range??"all"}/></Suspense>;
+ if(section.id==="news"&&item.id==="news")return <CompanyNews key={symbol} ticker={symbol}/>;
  if(section.id==="news"&&item.id==="filings")return <Suspense fallback={<div className="panel">Loading SEC filings…</div>}><FilingsData ticker={symbol}/></Suspense>;
  return <div className="panel"><h2>{item.label}</h2><p>This tab is not built yet.</p></div>;
 }

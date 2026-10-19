@@ -6,6 +6,10 @@ export type Chart = {
   high52: number;
   low52: number;
   volume: number;
+  open?: number;
+  firstTradeDate?: number;
+  dividendRate?: number;
+  exDividendDate?: number;
   points: { t: number; c: number }[];
 };
 
@@ -29,6 +33,10 @@ export async function getChart(symbol: string, range = "1y"): Promise<Chart | nu
       high52: r.meta.fiftyTwoWeekHigh,
       low52: r.meta.fiftyTwoWeekLow,
       volume: r.meta.regularMarketVolume,
+      open: r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,
+      firstTradeDate: r.meta.firstTradeDate,
+      dividendRate: r.meta.trailingAnnualDividendRate,
+      exDividendDate: r.meta.exDividendDate,
       points,
     };
   } catch {

@@ -1,4 +1,4 @@
-import { lookupTicker, getSubmissions, getBusinessDescription } from "@/lib/sec";
+import { lookupTicker, getSubmissions } from "@/lib/sec";
 import BusinessDescription from "@/components/BusinessDescription";
 import { getFundamentals } from "@/lib/data";
 import { getChart } from "@/lib/market";
@@ -15,14 +15,14 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
   if (!co) notFound();
   const [subs, fund, stock, spx] = await Promise.all([
     getSubmissions(co.cik),
-    getFundamentals(co.cik).catch(() => null),
+    Promise.resolve(null),
     getChart(co.ticker, "1y"),
     getChart("^GSPC", "1y"),
   ]);
   const a = subs.addresses?.business ?? {};
   const change = stock ? stock.price - stock.prevClose : 0;
   const changePct = stock ? (change / stock.prevClose) * 100 : 0;
-  const mcap = stock && fund?.sharesOutstanding ? stock.price * fund.sharesOutstanding : null;
+  const mcap = null;
   // Do not block the security snapshot on third-party WACC pages or a second SEC facts pass.
   const extra={enterpriseValue:null as number|null},wacc=null as {value:number;source:string}|null;
   const recent = subs.filings.recent;

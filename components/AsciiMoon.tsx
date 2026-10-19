@@ -20,13 +20,12 @@ function shadowPath(phase:number){
 }
 export default function AsciiMoon(){
  const [phase,setPhase]=useState<number|null>(null);
- const [soundOn,setSoundOn]=useState(false);
  const audioRef=useRef<AudioContext|null>(null);
  const blastRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{const update=()=>setPhase(lunarPhase(new Date()));update();const id=window.setInterval(update,3600000);return()=>window.clearInterval(id)},[]);
  const path=useMemo(()=>phase===null?"":shadowPath(phase),[phase]);
  useEffect(()=>{
-  if(!soundOn||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const play=()=>{
    if(document.hidden)return;
    const ctx=audioRef.current;
@@ -64,12 +63,28 @@ export default function AsciiMoon(){
   const interval=window.setInterval(sync,80);
   sync();
   return()=>window.clearInterval(interval);
- },[soundOn]);
+ },[]);
  useEffect(()=>()=>{if(audioRef.current)void audioRef.current.close()},[]);
- const toggleSound=async()=>{
-  if(soundOn){setSoundOn(false);return}
-  try{const ctx=audioRef.current||new AudioContext();audioRef.current=ctx;await ctx.resume();setSoundOn(true)}catch{setSoundOn(false)}
- };
+ useEffect(()=>{
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const unlock=()=>{
+   try{
+    const ctx=audioRef.current||new AudioContext();
+    audioRef.current=ctx;
+    void ctx.resume().then(()=>{if(ctx.state==="running")detach()}).catch(()=>{});
+   }catch{}
+  };
+  const detach=()=>{
+   window.removeEventListener("pointerdown",unlock);
+   window.removeEventListener("keydown",unlock);
+   window.removeEventListener("touchstart",unlock);
+  };
+  window.addEventListener("pointerdown",unlock,{passive:true});
+  window.addEventListener("keydown",unlock);
+  window.addEventListener("touchstart",unlock,{passive:true});
+  unlock();
+  return detach;
+ },[]);
  return <div className="home-lunar-scene">
   <div className="home-ascii-moon home-photo-moon" aria-hidden="true" title="NASA lunar near-side imagery with approximate current phase">
    <div className="home-photo-moon-disc" style={{backgroundImage:'url("'+image+'")'}} />
@@ -88,12 +103,11 @@ export default function AsciiMoon(){
     <ellipse cx="79" cy="40" rx="12" ry="10" fill="#586b72" stroke="#172733" strokeWidth="2"/>
     <circle cx="79" cy="40" r="4" fill="#a8b8ba"/>
    </svg>
-   <svg className="home-death-star-converge" viewBox="0 0 120 120" aria-hidden="true"><g stroke="#83ff9a" strokeWidth="1.1" strokeLinecap="round"><line x1="37" y1="16" x2="101" y2="60"/><line x1="28" y1="43" x2="101" y2="60"/><line x1="42" y1="89" x2="101" y2="60"/><line x1="76" y1="108" x2="101" y2="60"/><line x1="84" y1="10" x2="101" y2="60"/></g></svg>
+   <svg className="home-death-star-converge" viewBox="0 0 120 120" aria-hidden="true"><g stroke="#83ff9a" strokeWidth=".85" strokeLinecap="round"><line x1="79" y1="27" x2="79" y2="40"/><line x1="67" y1="35" x2="79" y2="40"/><line x1="91" y1="35" x2="79" y2="40"/><line x1="70" y1="48" x2="79" y2="40"/><line x1="88" y1="48" x2="79" y2="40"/></g></svg>
    <div className="home-death-star-charge"/>
   </div>
   <div className="home-death-star-beam" aria-hidden="true"/>
   <div ref={blastRef} className="home-moon-blast" aria-hidden="true"/>
   <div className="home-moon-debris" aria-hidden="true">{Array.from({length:9},(_,i)=><span key={i} className={`home-moon-fragment home-moon-fragment-${i+1}`} style={{backgroundImage:'url("'+image+'")'}}/>)}</div>
-  <button type="button" className="home-explosion-sound" onClick={toggleSound} aria-pressed={soundOn} title="Browsers require a click to enable sound effects">{soundOn?"🔊 Explosion sound on":"🔇 Enable explosion sound"}</button>
  </div>;
 }

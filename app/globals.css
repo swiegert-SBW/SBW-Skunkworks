@@ -659,3 +659,11 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .home-death-star-beam{left:calc(clamp(12px,5vw,85px) + 112px)}
 @media(max-width:850px){.home-death-star-beam{left:calc(10px + 75px)}}
 @media(prefers-reduced-motion:reduce){.home-death-star-converge{display:none}}
+
+/* V90: fine rays converge within upper-right superlaser dish. */
+.home-death-star-charge{left:calc(65.833% - 8px);top:calc(33.333% - 8px);width:16px;height:16px}
+.home-death-star-beam{left:calc(clamp(12px,5vw,85px) + 74px);top:calc(10% + 75px)}
+.home-death-star-converge line{stroke-dasharray:18;stroke-dashoffset:18;animation:home-laser-rays-v90 var(--lunar-cycle) linear infinite}
+@keyframes home-laser-rays-v90{0%,77%{stroke-dashoffset:18}80.8%,100%{stroke-dashoffset:0}}
+.home-explosion-sound{display:none!important}
+@media(max-width:850px){.home-death-star-beam{left:calc(10px + 49px);top:calc(6% + 55px)}}

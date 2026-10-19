@@ -824,3 +824,17 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .consensus-range-value{color:#f1f5fa;font-weight:700}
 .consensus-range-label{color:#aabbd0;text-align:center}
 .consensus-panel .stmt{font-size:12px}
+
+/* V103 financial estimates grid */
+.consensus-grid-wrap{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:8px}
+.consensus-grid{min-width:1100px;width:max-content;border-collapse:separate;border-spacing:0}
+.consensus-grid th,.consensus-grid td{min-width:125px;padding:13px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.consensus-grid th{background:#19212b;color:var(--ink);font-weight:650}
+.consensus-grid .consensus-metric-col{position:sticky;left:0;z-index:2;min-width:225px;text-align:left;background:#171e28;box-shadow:1px 0 0 var(--line)}
+.consensus-grid th.consensus-metric-col{z-index:3;background:#202a36}
+.consensus-grid td.consensus-actual{background:#20262e}
+.consensus-grid td.consensus-actual strong{color:#d2dce8}
+.consensus-grid td strong{display:block;font-size:13px}
+.consensus-col-type{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:3px}
+.consensus-yoy{display:block;font-size:11px;color:var(--blue);margin-top:3px}
+.consensus-source{margin-top:14px}

@@ -43,6 +43,6 @@ export async function GET(){
   if(!r.ok)return NextResponse.json({error:"Edward Jones unavailable"},{status:502});
   const {date,entries}=extract(await r.text());
   if(entries.length<2)return NextResponse.json({error:"Could not identify the latest recap bullet points"},{status:502});
-  return NextResponse.json({summary:summary(entries),date,url:SOURCE},{headers:{"Cache-Control":"no-store, no-cache, max-age=0, must-revalidate"}});
+  return NextResponse.json({summary:summary(entries),entries:entries.map(({heading,detail})=>({heading,detail})),date,url:SOURCE},{headers:{"Cache-Control":"no-store, no-cache, max-age=0, must-revalidate"}});
  }catch{return NextResponse.json({error:"Recap retrieval failed"},{status:502})}
 }

@@ -674,3 +674,11 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .news-benz-list li{padding-left:3px;margin:0 0 14px;line-height:1.75}
 .news-benz-list li:last-child{margin-bottom:0}
 .news-benz-list strong{font-weight:750;color:#f0f6ff}
+
+/* Financial chart controls */
+.financial-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:18px 0;padding:14px;background:#1b222d;border:1px solid #344253;border-radius:10px}
+.financial-filters label{display:flex;flex-direction:column;gap:5px;color:#aabbd0;font-size:12px;font-weight:600}
+.financial-filters select,.financial-filters input,.financial-filters button{background:#101721;color:#f1f5fa;border:1px solid #405169;border-radius:7px;padding:9px 11px;font:inherit;min-height:38px}
+.financial-filters select:focus,.financial-filters input:focus{border-color:#4da3ff;outline:1px solid #4da3ff}
+.financial-filters button{cursor:pointer;color:#8ec9ff;font-weight:700}
+.financial-filters button:hover{background:#253c55}

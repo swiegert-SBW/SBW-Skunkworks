@@ -26,7 +26,7 @@ export default async function SubPage({
     const period = query.period === "annual" ? "annual" : "quarterly";
     return <StatementView cik={co.cik} ticker={co.ticker} sub={item.id} period={period} range={query.range ?? "all"} />;
   }
-  if(section.id==="charts"&&item.id==="financial-chart"){try{const facts=await getCompanyFacts(co.cik);const data=Object.fromEntries(["quarterly","annual"].map(period=>[period,Object.fromEntries(Object.entries(DEFS).map(([key,def])=>[key,buildStatement(facts,def,period as "quarterly"|"annual")]))]));return <FinancialCharts ticker={co.ticker} data={data}/>;}catch{return <div className="panel">SEC financial data is temporarily unavailable.</div>}}
+  if(section.id==="charts"&&item.id==="financial-chart"){try{const facts=await getCompanyFacts(co.cik);const data={quarterly:Object.fromEntries(Object.entries(DEFS).map(([key,def])=>[key,buildStatement(facts,def,"quarterly")])),annual:Object.fromEntries(Object.entries(DEFS).map(([key,def])=>[key,buildStatement(facts,def,"annual")]))};return <FinancialCharts ticker={co.ticker} data={data}/>;}catch{return <div className="panel">SEC financial data is temporarily unavailable.</div>}}
   if (section.id === "news" && item.id === "filings") return <FilingsView cik={co.cik} />;
 
   return (

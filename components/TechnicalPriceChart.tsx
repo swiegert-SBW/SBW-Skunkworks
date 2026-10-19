@@ -18,10 +18,16 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  useEffect(()=>{const ctl=new AbortController();if(!compared.length)return;
  Promise.all(compared.map(async t=>{try{const r=await fetch("/api/company-price-history?ticker="+encodeURIComponent(t)+"&range="+range,{signal:ctl.signal});const d=await r.json();return [t,d.points||[]] as const}catch{return [t,[]] as const}})).then(entries=>{if(!ctl.signal.aborted)setComparisons(Object.fromEntries(entries))});return ()=>ctl.abort()},[compared,range]);
  const closes=useMemo(()=>points.map(p=>p.c),[points]),s20=useMemo(()=>sma(closes,20),[closes]),s50=useMemo(()=>sma(closes,50),[closes]),rs=useMemo(()=>rsi(closes),[closes]);
- const w=1200,h=480,left=18,right=95,top=24,bottom=38,chartBottom=h-bottom;
- const colors=["#27cf84","#f5b544","#c494ff","#f07171"];
- const aligned=useMemo(()=>compared.map((t,j)=>{const source=comparisons[t]||[];const exact=new Map(source.map(p=>[p.t,p.c]));const daily=new Map(source.map(p=>[dateKey(p.t),p.c]));const values=points.map(p=>exact.get(p.t)??daily.get(dateKey(p.t))??null);const first=values.find(v=>v!==null);const base=closes[0];return {ticker:t,color:colors[j%colors.length],values:values.map(v=>v===null||first===null||!first?null:v/first*base)}}),[compared,comparisons,points,closes]);
- const allValues=[...closes,...(ma20?s20:[]),...(ma50?s50:[]),...aligned.flatMap(a=>a.values)].filter((v):v is number=>v!==null&&Number.isFinite(v));
+ const w=1200,h=300,left=18,right=95,top=18,bottom=30,chartBottom=h-bottom;
+ const colors=["#54a6ff","#f5b544","#c494ff"];
+ const aligned=useMemo(()=>compared.map((t,j)=>{const source=comparisons[t]||[];const exact=new Map(source.map(p=>[p.t,p.c]));const daily=new Map(source.map(p=>[dateKey(p.t),p.c]));const values=points.map(p=>exact.get(p.t)??daily.get(dateKey(p.t))??null);const firstIndex=values.findIndex(v=>v!==null);const first=firstIndex>=0?values[firstIndex]:null;const base=points[firstIndex]?.c;return {ticker:t,color:colors[j%colors.length],values:values.map((v,i)=>v===null||first===null||!first||!base||i<firstIndex?null:(v/first-1)*100),start:firstIndex}}),[compared,comparisons,points,closes]);
+ const comparing=compared.length>0,baseClose=closes[0]||1;
+ const referenceValues=comparing?closes.map(v=>(v/baseClose-1)*100):closes;
+ const plottedS20=comparing?s20.map(v=>v===null?null:(v/baseClose-1)*100):s20;
+ const plottedS50=comparing?s50.map(v=>v===null?null:(v/baseClose-1)*100):s50;
+ const axisFormat=(v:number)=>comparing?(v>=0?"+":"")+v.toFixed(1)+"%":fmt(v);
+ const lineEnds=[{ticker,color:"#42c96d",values:referenceValues},...aligned].map(line=>({...line,last:line.values.findLastIndex(v=>v!==null)})).filter(line=>line.last>=0);
+ const allValues=[...referenceValues,...(ma20?plottedS20:[]),...(ma50?plottedS50:[]),...aligned.flatMap(a=>a.values)].filter((v):v is number=>v!==null&&Number.isFinite(v));
  const low=allValues.length?Math.min(...allValues):0,high=allValues.length?Math.max(...allValues):1,span=Math.max(.01,high-low),min=low-span*.08,max=high+span*.08;
  const x=(i:number)=>left+i*(w-left-right)/Math.max(1,points.length-1),y=(v:number)=>top+(max-v)/(max-min)*(chartBottom-top);
  const path=(arr:(number|null)[])=>arr.map((v,i)=>v===null?"":(i===0||arr[i-1]===null?"M":"L")+x(i).toFixed(1)+","+y(v).toFixed(1)).join(" ");
@@ -37,20 +43,21 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
   {loading&&<p className="muted">Loading price history…</p>}{error&&<p className="muted">{error}</p>}
   {!loading&&points.length>1&&<div className="technical-plot">
    <svg ref={svg} viewBox={`0 0 ${w} ${h}`} onPointerMove={onMove} onPointerLeave={()=>setHover(null)} role="img" aria-label={ticker+" historical prices"}>
-    {[0,1,2,3,4,5].map(i=>{const v=min+(max-min)*i/5;return <g key={i}><line x1={left} x2={w-right} y1={y(v)} y2={y(v)} stroke="#303a45"/><text x={w-right+12} y={y(v)+4} fill="#aebdce" fontSize="13">{fmt(v)}</text></g>})}
-    <path d={path(closes)} stroke="#42c96d" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-    {ma20&&<path d={path(s20)} stroke="#f7b54c" strokeWidth="2" fill="none"/>}{ma50&&<path d={path(s50)} stroke="#bf9bff" strokeWidth="2" fill="none"/>}
+    {[0,1,2,3,4,5].map(i=>{const v=min+(max-min)*i/5;return <g key={i}><line x1={left} x2={w-right} y1={y(v)} y2={y(v)} stroke="#303a45"/><text x={w-right+12} y={y(v)+4} fill="#aebdce" fontSize="11">{axisFormat(v)}</text></g>})}
+    <path d={path(referenceValues)} stroke="#42c96d" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
+    {ma20&&<path d={path(plottedS20)} stroke="#f7b54c" strokeWidth="2" fill="none"/>}{ma50&&<path d={path(plottedS50)} stroke="#bf9bff" strokeWidth="2" fill="none"/>}
     {aligned.map(a=><path key={a.ticker} d={path(a.values)} stroke={a.color} strokeWidth="2" fill="none"/>)}
     {[0,1,2,3,4,5].map(i=>{const idx=Math.round(i*(points.length-1)/5);return <text key={i} x={x(idx)} y={h-9} textAnchor="middle" fontSize="12" fill="#aebdce">{range==="1D"||range==="5D"?new Date(points[idx].t*1000).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",timeZone:"America/New_York"}):new Date(points[idx].t*1000).toLocaleDateString("en-US",{month:"short",year:"2-digit",timeZone:"UTC"})}</text>})}
-    {hover!==null&&<><line x1={x(hover)} x2={x(hover)} y1={top} y2={chartBottom} stroke="#aab8c9" strokeDasharray="4 5"/><circle cx={x(hover)} cy={y(closes[hover])} r="5" fill="#42c96d" stroke="#101820" strokeWidth="2"/></>}
+    {hover!==null&&<><line x1={x(hover)} x2={x(hover)} y1={top} y2={chartBottom} stroke="#aab8c9" strokeDasharray="4 5"/><circle cx={x(hover)} cy={y(referenceValues[hover])} r="5" fill="#42c96d" stroke="#101820" strokeWidth="2"/></>}
+    {lineEnds.map(line=>{const v=line.values[line.last];if(v===null)return null;return <g key={line.ticker} transform={"translate("+(w-right+4)+","+Math.max(12,Math.min(chartBottom-12,y(v)))+")"}><rect x="0" y="-11" width={Math.max(42,line.ticker.length*8+12)} height="22" rx="5" fill="#1c2939" stroke={line.color} strokeWidth="1.2"/><text x="7" y="4" fill={line.color} fontSize="11" fontWeight="700">{line.ticker}</text></g>})}
    </svg>
-   {hover!==null&&<div className="technical-tooltip" style={{left:Math.min(78,Math.max(1,x(hover)/w*100))+"%",top:"9%"}}><strong>{new Date(points[hover].t*1000).toLocaleString("en-US",{dateStyle:"medium",timeStyle:range==="1D"||range==="5D"?"short":undefined})}</strong><div>{ticker}: {fmt(closes[hover])}</div>{ma20&&s20[hover]!==null&&<div>SMA20: {fmt(s20[hover]!)}</div>}{ma50&&s50[hover]!==null&&<div>SMA50: {fmt(s50[hover]!)}</div>}{aligned.map(a=><div key={a.ticker}>{a.ticker}: {a.values[hover]!==null?fmt(a.values[hover]!):"N/A"} (indexed)</div>)}</div>}
+   {hover!==null&&<div className="technical-tooltip" style={{left:Math.min(78,Math.max(1,x(hover)/w*100))+"%",top:"9%"}}><strong>{new Date(points[hover].t*1000).toLocaleString("en-US",{dateStyle:"medium",timeStyle:range==="1D"||range==="5D"?"short":undefined})}</strong><div>{ticker}: {axisFormat(referenceValues[hover])}</div>{ma20&&s20[hover]!==null&&<div>SMA20: {axisFormat(plottedS20[hover]!)}</div>}{ma50&&s50[hover]!==null&&<div>SMA50: {axisFormat(plottedS50[hover]!)}</div>}{aligned.map(a=><div key={a.ticker}>{a.ticker}: {a.values[hover]!==null?axisFormat(a.values[hover]!):"N/A"}</div>)}</div>}
   </div>}
-  {!loading&&showRsi&&points.length>1&&<div className="technical-rsi"><div className="technical-rsi-label">RSI (14) {rs.at(-1)?.toFixed(2)??"N/A"}</div><svg viewBox={`0 0 ${w} 150`} role="img" aria-label="Relative strength index" onPointerMove={e=>{const box=e.currentTarget.getBoundingClientRect();const px=(e.clientX-box.left)/box.width*w;setHover(Math.max(0,Math.min(points.length-1,Math.round((px-left)/(w-left-right)*(points.length-1)))));}} onPointerLeave={()=>setHover(null)}>
-   {[30,50,70].map(v=><g key={v}><line x1={left} x2={w-right} y1={140-v*1.25} y2={140-v*1.25} stroke="#6d7884" strokeDasharray="5 5"/><text x={w-right+12} y={144-v*1.25} fill="#aebdce" fontSize="13">{v}</text></g>)}
-   {rs.map((v,i)=>{if(i===0||v===null||rs[i-1]===null)return null;const prior=rs[i-1]!;const color=v>70?"#f06469":v<30?"#26d78c":"#d9e1ea";return <line key={i} x1={x(i-1)} y1={140-prior*1.25} x2={x(i)} y2={140-v*1.25} stroke={color} strokeWidth="2.3"/>})}
-   {hover!==null&&<line x1={x(hover)} x2={x(hover)} y1="10" y2="140" stroke="#9ca9b7" strokeDasharray="4 5"/>}
+  {!loading&&showRsi&&points.length>1&&<div className="technical-rsi"><div className="technical-rsi-label">RSI (14) {rs.at(-1)?.toFixed(2)??"N/A"}</div><svg viewBox={`0 0 ${w} 105`} role="img" aria-label="Relative strength index" onPointerMove={e=>{const box=e.currentTarget.getBoundingClientRect();const px=(e.clientX-box.left)/box.width*w;setHover(Math.max(0,Math.min(points.length-1,Math.round((px-left)/(w-left-right)*(points.length-1)))));}} onPointerLeave={()=>setHover(null)}>
+   {[30,50,70].map(v=><g key={v}><line x1={left} x2={w-right} y1={99-v*.85} y2={140-v*1.25} stroke="#6d7884" strokeDasharray="5 5"/><text x={w-right+12} y={103-v*.85} fill="#aebdce" fontSize="11">{v}</text></g>)}
+   {rs.map((v,i)=>{if(i===0||v===null||rs[i-1]===null)return null;const prior=rs[i-1]!;const color=v>70?"#f06469":v<30?"#26d78c":"#d9e1ea";return <line key={i} x1={x(i-1)} y1={99-prior*.85} x2={x(i)} y2={140-v*1.25} stroke={color} strokeWidth="2.3"/>})}
+   {hover!==null&&<line x1={x(hover)} x2={x(hover)} y1="10" y2="99" stroke="#9ca9b7" strokeDasharray="4 5"/>}
   </svg>{hover!==null&&rs[hover]!==null&&<div className="technical-rsi-value">RSI: {rs[hover]!.toFixed(2)}</div>}</div>}
-  <p className="muted small">Source: market price feed. RSI and moving averages are calculated on the selected interval. Comparisons are indexed to the selected stock's starting price. No volume displayed.</p>
+  <p className="muted small">Source: market price feed. RSI and moving averages are calculated on the selected interval. Comparisons switch all lines to percentage returns from the selected range's starting date. No volume displayed.</p>
  </div>;
 }

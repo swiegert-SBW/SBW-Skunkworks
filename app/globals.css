@@ -731,3 +731,28 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .technical-rsi svg{display:block;width:100%;touch-action:pan-y}
 .technical-rsi-label{padding:4px 12px;color:#cdd9e6;font-size:13px;font-weight:700}
 .technical-rsi-value{position:absolute;top:4px;right:16px;color:#e2e8f0;font-size:12px}
+
+/* V96: compact charts, consistent typography, accessible indicator controls */
+.technical-panel{padding:14px 16px}
+.technical-head{padding-bottom:7px;gap:10px}
+.technical-head h2{font-size:16px;line-height:1.2}
+.technical-ranges button{font-size:12px;padding:6px 8px}
+.technical-tools{gap:9px;padding:8px 0}
+.technical-tools>label{border:1px solid #3a4d64;background:#1b2838;padding:6px 10px;border-radius:8px;font-size:12px;transition:background .15s,border-color .15s}
+.technical-tools>label:has(input:checked){background:#1a3b60;border-color:#5798e4;color:#eaf4ff}
+.technical-tools>label:hover{background:#2b415a}
+.technical-tools input[type=checkbox]{appearance:none;width:12px;height:12px;border:1px solid #7290ad;border-radius:3px;margin:0;background:#0e1928}
+.technical-tools input[type=checkbox]:checked{background:#59a3ff;border-color:#59a3ff}
+.technical-tools input[type=checkbox]:checked:after{content:"✓";display:block;color:#061321;font-size:10px;font-weight:900;line-height:10px;text-align:center}
+.technical-compare input{font-size:12px;padding:6px 9px}
+.technical-compare button,.technical-chip{font-size:12px;padding:6px 9px}
+.technical-plot{margin-top:7px}
+.technical-plot svg{max-height:min(38vh,320px)}
+.technical-rsi{margin-top:5px;padding-top:2px}
+.technical-rsi svg{max-height:min(13vh,112px)}
+.technical-rsi-label{font-size:12px;padding:3px 10px}
+.technical-panel>.muted.small{margin:6px 0 0;font-size:11px}
+.financial-filters{margin:10px 0;padding:10px}
+.financial-filters+div>svg{max-height:min(31vh,280px)}
+.financial-filters+div .table-wrap{margin-top:5px}
+.panel:has(.financial-filters)>.muted.small{font-size:11px;margin:8px 0 0}

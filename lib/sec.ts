@@ -16,16 +16,24 @@ async function secFetch(url: string, revalidate = HOUR) {
 export type Company = { cik: string; ticker: string; name: string };
 
 // Turns "AAPL" into the SEC's company number (the CIK).
-export async function lookupTicker(ticker: string): Promise<Company | null> {
-  const data = await secFetch("https://www.sec.gov/files/company_tickers.json", 86400);
-  const t = decodeURIComponent(ticker).toUpperCase();
-  for (const key of Object.keys(data)) {
-    const r = data[key];
-    if (r.ticker === t) {
-      return { cik: String(r.cik_str).padStart(10, "0"), ticker: r.ticker, name: r.title };
-    }
+let tickerIndex:Map<string,Company>|null=null;
+let tickerIndexAt=0;
+let tickerIndexPending:Promise<Map<string,Company>>|null=null;
+async function loadTickerIndex(){
+ if(tickerIndex&&Date.now()-tickerIndexAt<86400000)return tickerIndex;
+ if(!tickerIndexPending)tickerIndexPending=secFetch("https://www.sec.gov/files/company_tickers.json",86400).then(data=>{
+  const index=new Map<string,Company>();
+  for(const record of Object.values(data) as {cik_str:number;ticker:string;title:string}[]){
+   const symbol=record.ticker.toUpperCase();
+   index.set(symbol,{cik:String(record.cik_str).padStart(10,"0"),ticker:symbol,name:record.title});
   }
-  return null;
+  tickerIndex=index;tickerIndexAt=Date.now();return index;
+ }).finally(()=>{tickerIndexPending=null});
+ return tickerIndexPending;
+}
+export async function lookupTicker(ticker:string):Promise<Company|null>{
+ const symbol=decodeURIComponent(ticker).toUpperCase();
+ try{return (await loadTickerIndex()).get(symbol)??null;}catch{return tickerIndex?.get(symbol)??null;}
 }
 
 // Company profile + list of recent filings.

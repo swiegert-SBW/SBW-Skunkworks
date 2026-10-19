@@ -807,3 +807,20 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .consensus-bar{width:60%;min-height:1px;background:#4389e9;border-radius:3px 3px 0 0}
 .consensus-bar-value{font-weight:700;color:#e9f3ff}
 .consensus-panel .stmt{font-size:12px}
+
+/* V100: consistent rounded segmented estimate controls and range plots */
+.consensus-panel .stmt-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.consensus-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.consensus-segment{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid #354a60;background:#1c2837;border-radius:999px}
+.consensus-segment button{border:0;border-radius:999px;background:transparent;color:#a8bcd4;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;line-height:18px}
+.consensus-segment button.active{background:#4b92ef;color:#fff;box-shadow:0 1px 5px #0004}
+.consensus-segment button:hover:not(.active){background:#30465e}
+.consensus-range-chart{display:flex;align-items:stretch;justify-content:space-evenly;gap:14px;height:280px;background:#121b27;border:1px solid #283848;border-radius:8px;padding:15px 20px;margin:14px 0}
+.consensus-range-item{display:flex;align-items:center;flex-direction:column;flex:1;min-width:90px;max-width:250px;font-size:12px;gap:6px}
+.consensus-range-plot{position:relative;width:100%;height:205px}
+.consensus-range-line{position:absolute;width:10px;left:calc(50% - 5px);background:#4389e9;border-radius:5px}
+.consensus-range-end{position:absolute;left:calc(50% - 24px);width:48px;height:2px;background:#88b9f9}
+.consensus-range-mean{position:absolute;left:calc(50% - 9px);width:18px;height:18px;border:3px solid #e9f3ff;background:#4389e9;border-radius:50%;transform:translateY(50%)}
+.consensus-range-value{color:#f1f5fa;font-weight:700}
+.consensus-range-label{color:#aabbd0;text-align:center}
+.consensus-panel .stmt{font-size:12px}

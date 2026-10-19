@@ -774,3 +774,24 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .financial-filters+div>svg{display:block;width:100%;height:auto;max-height:none}
 .financial-filters+div .stmt{font-size:12px}
 .technical-rsi svg{max-height:min(16vh,140px)}
+
+/* V98: prevent SVG letterboxing so pointer mapping and RSI align */
+.technical-plot svg,.technical-rsi svg{display:block;width:100%;height:auto;max-height:none!important;aspect-ratio:auto}
+.technical-plot,.technical-rsi{width:100%}
+.technical-indicator-menu{position:relative;z-index:8;font-size:12px}
+.technical-indicator-menu>summary{list-style:none;cursor:pointer;border:1px solid #44617d;border-radius:7px;padding:8px 12px;background:#1b2b3e;color:#92caff;font-weight:700}
+.technical-indicator-menu>summary::-webkit-details-marker{display:none}
+.technical-indicator-options{position:absolute;top:calc(100% + 5px);left:0;min-width:260px;max-height:310px;overflow-y:auto;background:#18212e;border:1px solid #435a73;box-shadow:0 12px 30px #0009;border-radius:8px;padding:6px;z-index:20}
+.technical-indicator-options label{display:flex;align-items:center;gap:9px;padding:8px 10px;white-space:nowrap;border:0!important;background:transparent!important;font-size:12px}
+.technical-indicator-options label:hover{background:#263b54!important}
+.financial-filters{align-items:end}
+.financial-filters label{gap:4px}
+.financial-filters .date-range-group{height:36px!important;min-height:36px!important;max-height:36px!important;align-self:end;padding:0 8px!important;gap:6px;flex-wrap:nowrap}
+.financial-filters .date-range-group select{height:30px!important;min-height:30px!important;padding:3px 8px!important}
+.financial-filters select,.financial-filters button{height:36px!important;min-height:36px!important}
+.panel:has(.financial-filters) svg text{font-size:10px}
+.company-news-box{width:100%;min-height:400px}
+.company-news-page .news-story-scroll{max-height:65vh;min-height:320px}
+.filing-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:14px 0}
+.filing-filters label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#aabbd0}
+.filing-filters select{height:36px;background:#101721;border:1px solid #405169;border-radius:7px;color:#f1f5fa;padding:6px 10px}

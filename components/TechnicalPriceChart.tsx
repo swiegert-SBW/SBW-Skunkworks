@@ -5,11 +5,13 @@ const ranges=["1D","5D","1M","3M","6M","YTD","1Y","3Y","5Y","ALL"] as const;
 type Range=(typeof ranges)[number];
 function sma(values:number[],n:number){let sum=0;return values.map((v,i)=>{sum+=v;if(i>=n)sum-=values[i-n];return i>=n-1?sum/n:null})}
 function rsi(values:number[],n=14){const out:(number|null)[]=Array(values.length).fill(null);if(values.length<=n)return out;let gains=0,losses=0;for(let i=1;i<=n;i++){const d=values[i]-values[i-1];gains+=Math.max(d,0);losses+=Math.max(-d,0)}let ag=gains/n,al=losses/n;out[n]=al===0?(ag===0?50:100):100-100/(1+ag/al);for(let i=n+1;i<values.length;i++){const d=values[i]-values[i-1];ag=(ag*(n-1)+Math.max(d,0))/n;al=(al*(n-1)+Math.max(-d,0))/n;out[i]=al===0?(ag===0?50:100):100-100/(1+ag/al)}return out}
+function ema(values:number[],n:number){const k=2/(n+1);let last:number|null=null;return values.map((v,i)=>{if(i<n-1)return null;if(i===n-1){last=values.slice(0,n).reduce((a,b)=>a+b,0)/n;return last}last=v*k+(last??v)*(1-k);return last})}
+function bands(values:number[],n=20){const middle=sma(values,n);return {upper:middle.map((m,i)=>{if(m===null)return null;const v=values.slice(i-n+1,i+1),sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/n);return m+2*sd}),lower:middle.map((m,i)=>{if(m===null)return null;const v=values.slice(i-n+1,i+1),sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/n);return m-2*sd})}}
 const fmt=(v:number)=>v.toLocaleString("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2});
 const dateKey=(t:number)=>new Date(t*1000).toISOString().slice(0,10);
 export default function TechnicalPriceChart({ticker}:{ticker:string}){
  const [range,setRange]=useState<Range>("3M"),[points,setPoints]=useState<Point[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
- const [ma20,setMa20]=useState(false),[ma50,setMa50]=useState(false),[showRsi,setShowRsi]=useState(true);
+ const [indicators,setIndicators]=useState<string[]>(["RSI (14)"]); const toggleIndicator=(id:string)=>setIndicators(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]); const indicatorOptions=["Bollinger Bands (20)","Exponential Moving Average (200)","Exponential Moving Average (50)","Relative Strength Index (14)","Simple Moving Average (200)","Simple Moving Average (50)","Simple Moving Average (20)"];
  const [otherInput,setOtherInput]=useState(""),[compared,setCompared]=useState<string[]>([]),[comparisons,setComparisons]=useState<Record<string,Point[]>>({});
  const [hover,setHover]=useState<number|null>(null),svg=useRef<SVGSVGElement>(null);
  useEffect(()=>{const ctl=new AbortController();setLoading(true);setError("");setHover(null);
@@ -17,7 +19,7 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  return ()=>ctl.abort()},[ticker,range]);
  useEffect(()=>{const ctl=new AbortController();if(!compared.length)return;
  Promise.all(compared.map(async t=>{try{const r=await fetch("/api/company-price-history?ticker="+encodeURIComponent(t)+"&range="+range,{signal:ctl.signal});const d=await r.json();return [t,d.points||[]] as const}catch{return [t,[]] as const}})).then(entries=>{if(!ctl.signal.aborted)setComparisons(Object.fromEntries(entries))});return ()=>ctl.abort()},[compared,range]);
- const closes=useMemo(()=>points.map(p=>p.c),[points]),s20=useMemo(()=>sma(closes,20),[closes]),s50=useMemo(()=>sma(closes,50),[closes]),rs=useMemo(()=>rsi(closes),[closes]);
+ const closes=useMemo(()=>points.map(p=>p.c),[points]),s20=useMemo(()=>sma(closes,20),[closes]),s50=useMemo(()=>sma(closes,50),[closes]),s200=useMemo(()=>sma(closes,200),[closes]),e50=useMemo(()=>ema(closes,50),[closes]),e200=useMemo(()=>ema(closes,200),[closes]),bb=useMemo(()=>bands(closes,20),[closes]),rs=useMemo(()=>rsi(closes),[closes]); const ma20=indicators.includes("Simple Moving Average (20)"),ma50=indicators.includes("Simple Moving Average (50)"),showRsi=indicators.includes("Relative Strength Index (14)"); const overlay=[{id:"Simple Moving Average (20)",v:s20,color:"#f7b54c"},{id:"Simple Moving Average (50)",v:s50,color:"#bf9bff"},{id:"Simple Moving Average (200)",v:s200,color:"#e78ac3"},{id:"Exponential Moving Average (50)",v:e50,color:"#ffbd72"},{id:"Exponential Moving Average (200)",v:e200,color:"#d7a7ff"},{id:"Bollinger Bands (20)",v:bb.upper,color:"#8aa6cf"},{id:"Bollinger Bands (20)",v:bb.lower,color:"#8aa6cf"}].filter(o=>indicators.includes(o.id));
  const w=1200,h=300,left=18,right=95,top=18,bottom=30,chartBottom=h-bottom;
  const colors=["#54a6ff","#f5b544","#c494ff"];
  const aligned=useMemo(()=>compared.map((t,j)=>{const source=comparisons[t]||[];const exact=new Map(source.map(p=>[p.t,p.c]));const daily=new Map(source.map(p=>[dateKey(p.t),p.c]));const values=points.map(p=>exact.get(p.t)??daily.get(dateKey(p.t))??null);const firstIndex=values.findIndex(v=>v!==null);const first=firstIndex>=0?values[firstIndex]:null;const base=points[firstIndex]?.c;return {ticker:t,color:colors[j%colors.length],values:values.map((v,i)=>v===null||first===null||!first||!base||i<firstIndex?null:(v/first-1)*100),start:firstIndex}}),[compared,comparisons,points,closes]);
@@ -27,7 +29,7 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  const plottedS50=comparing?s50.map(v=>v===null?null:(v/baseClose-1)*100):s50;
  const axisFormat=(v:number)=>comparing?(v>=0?"+":"")+v.toFixed(1)+"%":fmt(v);
  const lineEnds=[{ticker,color:"#42c96d",values:referenceValues},...aligned].map(line=>({...line,last:line.values.findLastIndex(v=>v!==null)})).filter(line=>line.last>=0);
- const allValues=[...referenceValues,...(ma20?plottedS20:[]),...(ma50?plottedS50:[]),...aligned.flatMap(a=>a.values)].filter((v):v is number=>v!==null&&Number.isFinite(v));
+ const allValues=[...referenceValues,...overlay.flatMap(o=>o.v.map(v=>v===null?null:comparing?(v/baseClose-1)*100:v)),...aligned.flatMap(a=>a.values)].filter((v):v is number=>v!==null&&Number.isFinite(v));
  const low=allValues.length?Math.min(...allValues):0,high=allValues.length?Math.max(...allValues):1,span=Math.max(.01,high-low),min=low-span*.08,max=high+span*.08;
  const x=(i:number)=>left+i*(w-left-right)/Math.max(1,points.length-1),y=(v:number)=>top+(max-v)/(max-min)*(chartBottom-top);
  const path=(arr:(number|null)[])=>arr.map((v,i)=>v===null?"":(i===0||arr[i-1]===null?"M":"L")+x(i).toFixed(1)+","+y(v).toFixed(1)).join(" ");
@@ -36,7 +38,7 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  return <div className="panel technical-panel">
   <div className="technical-head"><div><h2>{ticker} Price Chart</h2>{closes.length>0&&<span className="technical-last">{fmt(closes[closes.length-1])}</span>}</div><div className="technical-ranges">{ranges.map(r=><button key={r} type="button" className={r===range?"selected":""} onClick={()=>setRange(r)}>{r==="ALL"?"Max":r}</button>)}</div></div>
   <div className="technical-tools">
-   <span className="technical-tool-label">Indicators</span><label><input type="checkbox" checked={ma20} onChange={e=>setMa20(e.target.checked)}/> SMA 20</label><label><input type="checkbox" checked={ma50} onChange={e=>setMa50(e.target.checked)}/> SMA 50</label><label><input type="checkbox" checked={showRsi} onChange={e=>setShowRsi(e.target.checked)}/> RSI (14)</label>
+   <details className="technical-indicator-menu"><summary>Indicators ({indicators.length}) ▾</summary><div className="technical-indicator-options">{indicatorOptions.map(id=><label key={id}><input type="checkbox" checked={indicators.includes(id)} onChange={()=>toggleIndicator(id)}/>{id}</label>)}</div></details>
    <form onSubmit={addCompare} className="technical-compare"><input aria-label="Compare ticker" placeholder="Compare ticker…" value={otherInput} onChange={e=>setOtherInput(e.target.value)}/><button type="submit">Compare</button></form>
    {compared.map((t,i)=><button key={t} type="button" className="technical-chip" style={{color:colors[i%colors.length]}} onClick={()=>setCompared(old=>old.filter(v=>v!==t))}>{t} ×</button>)}
   </div>
@@ -45,7 +47,7 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
    <svg ref={svg} viewBox={`0 0 ${w} ${h}`} onPointerMove={onMove} onPointerLeave={()=>setHover(null)} role="img" aria-label={ticker+" historical prices"}>
     {[0,1,2,3,4,5].map(i=>{const v=min+(max-min)*i/5;return <g key={i}><line x1={left} x2={w-right} y1={y(v)} y2={y(v)} stroke="#303a45"/><text x={w-right+12} y={y(v)+4} fill="#aebdce" fontSize="11">{axisFormat(v)}</text></g>})}
     <path d={path(referenceValues)} stroke="#42c96d" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-    {ma20&&<path d={path(plottedS20)} stroke="#f7b54c" strokeWidth="2" fill="none"/>}{ma50&&<path d={path(plottedS50)} stroke="#bf9bff" strokeWidth="2" fill="none"/>}
+    {overlay.map((o,i)=><path key={o.id+i} d={path(o.v.map(v=>v===null?null:comparing?(v/baseClose-1)*100:v))} stroke={o.color} strokeWidth="1.5" fill="none" strokeDasharray={o.id.includes("Bollinger")?"5 3":undefined}/>)}
     {aligned.map(a=><path key={a.ticker} d={path(a.values)} stroke={a.color} strokeWidth="2" fill="none"/>)}
     {[0,1,2,3,4,5].map(i=>{const idx=Math.round(i*(points.length-1)/5);return <text key={i} x={x(idx)} y={h-9} textAnchor="middle" fontSize="12" fill="#aebdce">{range==="1D"||range==="5D"?new Date(points[idx].t*1000).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",timeZone:"America/New_York"}):new Date(points[idx].t*1000).toLocaleDateString("en-US",{month:"short",year:"2-digit",timeZone:"UTC"})}</text>})}
     {hover!==null&&<><line x1={x(hover)} x2={x(hover)} y1={top} y2={chartBottom} stroke="#aab8c9" strokeDasharray="4 5"/><circle cx={x(hover)} cy={y(referenceValues[hover])} r="5" fill="#42c96d" stroke="#101820" strokeWidth="2"/></>}

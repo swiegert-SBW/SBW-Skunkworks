@@ -682,3 +682,14 @@ body:has(.home-stage) .workstation-sticky-header .topbar{position:absolute}
 .financial-filters select:focus,.financial-filters input:focus{border-color:#4da3ff;outline:1px solid #4da3ff}
 .financial-filters button{cursor:pointer;color:#8ec9ff;font-weight:700}
 .financial-filters button:hover{background:#253c55}
+
+/* SBW dark scrollbars across the workstation */
+html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
+*{scrollbar-color:#40536a #111820;scrollbar-width:thin}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:#111820;border-radius:10px}
+*::-webkit-scrollbar-thumb{background:#40536a;border:2px solid #111820;border-radius:10px}
+*::-webkit-scrollbar-thumb:hover{background:#6182a5}
+*::-webkit-scrollbar-corner{background:#111820}
+.financial-filters optgroup{color:#8ec9ff;font-weight:700;background:#111820}
+.financial-filters option{color:#e9f0fa;background:#111820}

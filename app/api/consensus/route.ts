@@ -3,10 +3,10 @@ export const runtime="nodejs";
 type Stats={mean:number|null;low:number|null;high:number|null;analysts:number|null;prior:number|null};
 type Forecast={label:string;revenue:Stats;eps:Stats};
 const empty=():Stats=>({mean:null,low:null,high:null,analysts:null,prior:null});
-const number=(raw:string):number|null=>{const s=raw.replace(/,/g,"").trim();if(!s||s==="--"||s==="N/A")return null;const m=s.match(/^(-?\\d+(?:\\.\\d+)?)\\s*([TBMK])?$/i);if(!m)return null;return Number(m[1])*({T:1e12,B:1e9,M:1e6,K:1}[m[2]?.toUpperCase() as "T"|"B"|"M"|"K"]||1)};
-const plain=(s:string)=>s.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi," ").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/&#x27;|&#39;/gi,"'").replace(/\\s+/g," ").trim();
+const number=(raw:string):number|null=>{const s=raw.replace(/,/g,"").trim();if(!s||s==="--"||s==="N/A")return null;const m=s.match(/^(-?\d+(?:\.\d+)?)\s*([TBMK])?$/i);if(!m)return null;return Number(m[1])*({T:1e12,B:1e9,M:1e6,K:1}[m[2]?.toUpperCase() as "T"|"B"|"M"|"K"]||1)};
+const plain=(s:string)=>s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/&#x27;|&#39;/gi,"'").replace(/\s+/g," ").trim();
 function section(html:string,title:string){const at=html.indexOf(title);if(at<0)return null;const start=html.indexOf("<table",at);if(start<0||start-at>18000)return null;const end=html.indexOf("</table>",start);if(end<0)return null;return html.slice(start,end+8)}
-function rows(table:string|null){if(!table)return [] as string[][];return [...table.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(m=>[...m[1].matchAll(/<(?:th|td)\\b[^>]*>([\\s\\S]*?)<\\/(?:th|td)>/gi)].map(c=>plain(c[1])))}
+function rows(table:string|null){if(!table)return [] as string[][];return [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)].map(c=>plain(c[1])))}
 function get(rows:string[][],label:string,index:number){const r=rows.find(row=>row[0]?.toLowerCase()===label.toLowerCase());return r?number(r[index+1]||""):null}
 function parseStats(rows:string[][],i:number,priorLabel:string):Stats{return {mean:get(rows,"Avg. Estimate",i),low:get(rows,"Low Estimate",i),high:get(rows,"High Estimate",i),analysts:get(rows,"No. of Analysts",i),prior:get(rows,priorLabel,i)}}
 export async function GET(req:Request){

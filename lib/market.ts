@@ -13,9 +13,9 @@ export type Chart = {
   points: { t: number; c: number }[];
 };
 
-export async function getChart(symbol: string, range = "1y"): Promise<Chart | null> {
+export async function getChart(symbol: string, range = "1y", interval = "1d"): Promise<Chart | null> {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d&events=div`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&events=div`;
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, next: { revalidate: 900 } });
     if (!res.ok) return null;
     const r = (await res.json())?.chart?.result?.[0];

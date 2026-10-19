@@ -24,7 +24,7 @@ export default async function SubPage({
   const item = section?.items.find((i) => i.id === sub);
   if (!section || !item) notFound();
 
-  if(section.id==="charts"&&item.id==="price-chart"){const chart=await getChart(co.ticker,"max");return <TechnicalPriceChart ticker={co.ticker} points={chart?.points??[]}/>;}
+  if(section.id==="charts"&&item.id==="price-chart"){const [chart,benchmark]=await Promise.all([getChart(co.ticker,"max"),getChart("^GSPC","max")]);return <TechnicalPriceChart ticker={co.ticker} points={chart?.points??[]} benchmark={benchmark?.points??[]}/>;}
   if (section.id === "financials" && STATEMENTS[item.id]) {
     const period = query.period === "annual" ? "annual" : "quarterly";
     return <StatementView cik={co.cik} ticker={co.ticker} sub={item.id} period={period} range={query.range ?? "all"} />;

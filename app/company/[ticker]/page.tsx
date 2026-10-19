@@ -3,6 +3,7 @@ import BusinessDescription from "@/components/BusinessDescription";
 import { getFundamentals } from "@/lib/data";
 import { getChart } from "@/lib/market";
 import { money } from "@/lib/format";
+import {extraStats,publicWacc} from "@/lib/company-stats";
 import PerformanceChart from "@/components/PerformanceChart";
 import { notFound } from "next/navigation";
 import type { Chart } from "@/lib/market";
@@ -23,6 +24,7 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
   const change = stock ? stock.price - stock.prevClose : 0;
   const changePct = stock ? (change / stock.prevClose) * 100 : 0;
   const mcap = stock && fund?.sharesOutstanding ? stock.price * fund.sharesOutstanding : null;
+  const [extra,wacc]=await Promise.all([extraStats(co.cik,mcap),publicWacc(co.ticker)]);
   const recent = subs.filings.recent;
   const k = recent.form.findIndex((f: string) => f === "10-K");
   const description = await getBusinessDescription(co.cik, subs);
@@ -31,21 +33,21 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
     ["Ticker", co.ticker],
     ["Price", stock ? `${stock.price.toFixed(2)}` : "n/a"],
     ["Market Cap", mcap ? money(mcap) : "n/a"],
-    ["Open", "N/A"],
+    ["Open", typeof stock?.open==="number"?stock.open.toFixed(2):"N/A"],
     ["Previous Close", stock ? `${stock.prevClose.toFixed(2)}` : "n/a"],
     ["52 Week Range", stock ? `$${stock.low52?.toFixed(2)} - $${stock.high52?.toFixed(2)}` : "n/a"],
     ["Volume", stock ? stock.volume?.toLocaleString("en-US") : "n/a"],
     ["Shares Outstanding", fund?.sharesOutstanding ? fund.sharesOutstanding.toLocaleString("en-US") : "n/a"],
-    ["Enterprise Value", "N/A"],
+    ["Enterprise Value",extra.enterpriseValue!==null?money(extra.enterpriseValue):"N/A"],
     ["Annual Revenue", fund?.revenue ? money(fund.revenue.value) : "n/a"],
     ["Float", "N/A"],
     ["Short Interest", "N/A"],
-    ["WACC", "N/A"],
+    ["WACC",wacc?`${wacc.value.toFixed(2)}% (${wacc.source})`:"N/A"],
     ["Beta", "N/A"],
     ["CUSIP", "N/A"],
-    ["First Trading Date", "N/A"],
-    ["Ex-Dividend Date", "N/A"],
-    ["Annual Dividend", "N/A"],
+    ["First Trading Date",stock?.firstTradeDate?new Date(stock.firstTradeDate*1000).toLocaleDateString("en-US"):"N/A"],
+    ["Ex-Dividend Date",stock?.exDividendDate?new Date(stock.exDividendDate*1000).toLocaleDateString("en-US"):"N/A"],
+    ["Annual Dividend",typeof stock?.dividendRate==="number"?"$"+stock.dividendRate.toFixed(2):"N/A"],
     ["Fiscal Year End", subs.fiscalYearEnd ? `${subs.fiscalYearEnd.slice(0, 2)}/${subs.fiscalYearEnd.slice(2)}` : "n/a"],
   ];
 

@@ -4,6 +4,8 @@ import { NAV } from "@/lib/nav";
 import {getCompanyFacts} from "@/lib/sec";
 import {buildStatement,STATEMENTS as DEFS} from "@/lib/statements";
 import FinancialCharts from "@/components/FinancialCharts";
+import TechnicalPriceChart from "@/components/TechnicalPriceChart";
+import {getChart} from "@/lib/market";
 import { STATEMENTS } from "@/lib/statements";
 import StatementView from "@/components/StatementView";
 import FilingsView from "@/components/FilingsView";
@@ -22,6 +24,7 @@ export default async function SubPage({
   const item = section?.items.find((i) => i.id === sub);
   if (!section || !item) notFound();
 
+  if(section.id==="charts"&&item.id==="price-chart"){const chart=await getChart(co.ticker,"max");return <TechnicalPriceChart ticker={co.ticker} points={chart?.points??[]}/>;}
   if (section.id === "financials" && STATEMENTS[item.id]) {
     const period = query.period === "annual" ? "annual" : "quarterly";
     return <StatementView cik={co.cik} ticker={co.ticker} sub={item.id} period={period} range={query.range ?? "all"} />;

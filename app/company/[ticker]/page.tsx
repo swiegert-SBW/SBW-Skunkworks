@@ -3,7 +3,6 @@ import BusinessDescription from "@/components/BusinessDescription";
 import { getFundamentals } from "@/lib/data";
 import { getChart } from "@/lib/market";
 import { money } from "@/lib/format";
-import {extraStats,publicWacc} from "@/lib/company-stats";
 import PerformanceChart from "@/components/PerformanceChart";
 import { notFound } from "next/navigation";
 import type { Chart } from "@/lib/market";
@@ -17,17 +16,18 @@ export default async function Snapshot({ params }: { params: Promise<{ ticker: s
   const [subs, fund, stock, spx] = await Promise.all([
     getSubmissions(co.cik),
     getFundamentals(co.cik).catch(() => null),
-    getChart(co.ticker, "5y"),
-    getChart("^GSPC", "5y"),
+    getChart(co.ticker, "1y"),
+    getChart("^GSPC", "1y"),
   ]);
   const a = subs.addresses?.business ?? {};
   const change = stock ? stock.price - stock.prevClose : 0;
   const changePct = stock ? (change / stock.prevClose) * 100 : 0;
   const mcap = stock && fund?.sharesOutstanding ? stock.price * fund.sharesOutstanding : null;
-  const [extra,wacc]=await Promise.all([extraStats(co.cik,mcap),publicWacc(co.ticker)]);
+  // Do not block the security snapshot on third-party WACC pages or a second SEC facts pass.
+  const extra={enterpriseValue:null as number|null},wacc=null as {value:number;source:string}|null;
   const recent = subs.filings.recent;
   const k = recent.form.findIndex((f: string) => f === "10-K");
-  const description = await getBusinessDescription(co.cik, subs);
+  const description = null; // Fetching and parsing an entire 10-K blocked the page on every cold load.
 
   const stats: [string, string][] = [
     ["Ticker", co.ticker],

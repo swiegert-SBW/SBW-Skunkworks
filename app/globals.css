@@ -795,3 +795,15 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .filing-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:14px 0}
 .filing-filters label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#aabbd0}
 .filing-filters select{height:36px;background:#101721;border:1px solid #405169;border-radius:7px;color:#f1f5fa;padding:6px 10px}
+
+/* V99: indicator export and consensus */
+.technical-export{margin-left:12px;border:1px solid #44617d;background:#1b2b3e;color:#92caff;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;white-space:nowrap}
+.technical-export:disabled{opacity:.45;cursor:default}
+.consensus-panel .stmt-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.consensus-panel .toggle button{border:0;background:transparent;color:#aabbd0;padding:8px 12px;cursor:pointer;font:inherit}
+.consensus-panel .toggle button.on{background:#173a60;color:#fff}
+.consensus-chart{display:flex;align-items:end;justify-content:space-evenly;gap:24px;height:285px;border:1px solid #283848;border-radius:8px;padding:16px 20px;margin:14px 0;background:#121b27}
+.consensus-bar-group{height:100%;display:flex;flex:1;max-width:260px;align-items:center;justify-content:end;flex-direction:column;gap:7px;font-size:12px;color:#b5c6d9}
+.consensus-bar{width:60%;min-height:1px;background:#4389e9;border-radius:3px 3px 0 0}
+.consensus-bar-value{font-weight:700;color:#e9f3ff}
+.consensus-panel .stmt{font-size:12px}

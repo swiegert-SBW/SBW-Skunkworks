@@ -11,7 +11,7 @@ const fmt=(v:number)=>v.toLocaleString("en-US",{style:"currency",currency:"USD",
 const dateKey=(t:number)=>new Date(t*1000).toISOString().slice(0,10);
 export default function TechnicalPriceChart({ticker}:{ticker:string}){
  const [range,setRange]=useState<Range>("3M"),[points,setPoints]=useState<Point[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
- const [indicators,setIndicators]=useState<string[]>(["RSI (14)"]); const toggleIndicator=(id:string)=>setIndicators(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]); const indicatorOptions=["Bollinger Bands (20)","Exponential Moving Average (200)","Exponential Moving Average (50)","Relative Strength Index (14)","Simple Moving Average (200)","Simple Moving Average (50)","Simple Moving Average (20)"];
+ const [indicators,setIndicators]=useState<string[]>(["Relative Strength Index (14)"]); const toggleIndicator=(id:string)=>setIndicators(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]); const indicatorOptions=["Bollinger Bands (20)","Exponential Moving Average (200)","Exponential Moving Average (50)","Relative Strength Index (14)","Simple Moving Average (200)","Simple Moving Average (50)","Simple Moving Average (20)"];
  const [otherInput,setOtherInput]=useState(""),[compared,setCompared]=useState<string[]>([]),[comparisons,setComparisons]=useState<Record<string,Point[]>>({});
  const [hover,setHover]=useState<number|null>(null),svg=useRef<SVGSVGElement>(null);
  useEffect(()=>{const ctl=new AbortController();setLoading(true);setError("");setHover(null);
@@ -35,10 +35,21 @@ export default function TechnicalPriceChart({ticker}:{ticker:string}){
  const path=(arr:(number|null)[])=>arr.map((v,i)=>v===null?"":(i===0||arr[i-1]===null?"M":"L")+x(i).toFixed(1)+","+y(v).toFixed(1)).join(" ");
  const onMove=(e:React.PointerEvent<SVGSVGElement>)=>{const box=svg.current?.getBoundingClientRect();if(!box||!points.length)return;const p=(e.clientX-box.left)/box.width*w;setHover(Math.max(0,Math.min(points.length-1,Math.round((p-left)/(w-left-right)*(points.length-1)))))};
  const addCompare=(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const t=otherInput.trim().toUpperCase();if(/^[A-Z0-9.^-]{1,12}$/.test(t)&&t!==ticker&&!compared.includes(t))setCompared(prev=>[...prev.slice(-2),t]);setOtherInput("")};
+ const exportExcel=async()=>{if(!points.length)return;
+  const indicatorSeries=overlay.map((o,i)=>({name:o.id+(o.id.includes("Bollinger")?(i===overlay.findIndex(x=>x.id===o.id)?" Upper":" Lower"):""),values:o.v}));
+  const headings=["Date",...(comparing?[ticker+" Return (%)",...aligned.map(a=>a.ticker+" Return (%)")]:[ticker+" Close (USD)"]),...indicatorSeries.map(o=>o.name),...(showRsi?["RSI (14)"]:[])];
+  const ExcelJS=(await import("exceljs")).default;
+  const workbook=new ExcelJS.Workbook();const sheet=workbook.addWorksheet("Price history");
+  sheet.addRow(headings);points.forEach((p,i)=>sheet.addRow([dateKey(p.t),...(comparing?[referenceValues[i],...aligned.map(a=>a.values[i])]:[p.c]),...indicatorSeries.map(o=>o.values[i]),...(showRsi?[rs[i]]:[])]));
+  sheet.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};sheet.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF163D62"}};
+  sheet.columns.forEach((column,i)=>{column.width=i===0?16:25;if(i>0)column.numFmt="0.00"});
+  sheet.views=[{state:"frozen",ySplit:1}];
+  const buffer=await workbook.xlsx.writeBuffer();const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=ticker+"_"+range+(comparing?"_returns":"_prices")+".xlsx";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+ };
  return <div className="panel technical-panel">
-  <div className="technical-head"><div><h2>{ticker} Price Chart</h2>{closes.length>0&&<span className="technical-last">{fmt(closes[closes.length-1])}</span>}</div><div className="technical-ranges">{ranges.map(r=><button key={r} type="button" className={r===range?"selected":""} onClick={()=>setRange(r)}>{r==="ALL"?"Max":r}</button>)}</div></div>
+  <div className="technical-head"><div><h2>{ticker} Price Chart</h2>{closes.length>0&&<span className="technical-last">{fmt(closes[closes.length-1])}</span>}</div><div className="technical-ranges">{ranges.map(r=><button key={r} type="button" className={r===range?"selected":""} onClick={()=>setRange(r)}>{r==="ALL"?"Max":r}</button>)}<button type="button" className="technical-export" disabled={!points.length||loading} onClick={exportExcel}>↓ Download Excel</button></div></div>
   <div className="technical-tools">
-   <details className="technical-indicator-menu"><summary>Indicators ({indicators.length}) ▾</summary><div className="technical-indicator-options">{indicatorOptions.map(id=><label key={id}><input type="checkbox" checked={indicators.includes(id)} onChange={()=>toggleIndicator(id)}/>{id}</label>)}</div></details>
+   <details className="technical-indicator-menu"><summary>Indicators ▾</summary><div className="technical-indicator-options">{indicatorOptions.map(id=><label key={id}><input type="checkbox" checked={indicators.includes(id)} onChange={()=>toggleIndicator(id)}/>{id}</label>)}</div></details>
    <form onSubmit={addCompare} className="technical-compare"><input aria-label="Compare ticker" placeholder="Compare ticker…" value={otherInput} onChange={e=>setOtherInput(e.target.value)}/><button type="submit">Compare</button></form>
    {compared.map((t,i)=><button key={t} type="button" className="technical-chip" style={{color:colors[i%colors.length]}} onClick={()=>setCompared(old=>old.filter(v=>v!==t))}>{t} ×</button>)}
   </div>

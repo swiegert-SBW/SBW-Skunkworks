@@ -33,9 +33,9 @@ export async function getChart(symbol: string, range = "1y"): Promise<Chart | nu
       high52: r.meta.fiftyTwoWeekHigh,
       low52: r.meta.fiftyTwoWeekLow,
       volume: r.meta.regularMarketVolume,
-      open: r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,
+      open: r.meta.regularMarketOpen ?? r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,
       firstTradeDate: r.meta.firstTradeDate,
-      dividendRate: r.meta.trailingAnnualDividendRate,
+      dividendRate: r.meta.trailingAnnualDividendRate ?? (r.events?.dividends ? (()=>{const dividends=Object.values(r.events.dividends) as {amount:number;date:number}[];const cutoff=Date.now()/1000-366*86400;const total=dividends.filter(d=>d.date>=cutoff).reduce((sum,d)=>sum+d.amount,0);return total>0?total:undefined})():undefined),
       exDividendDate: r.meta.exDividendDate,
       points,
     };

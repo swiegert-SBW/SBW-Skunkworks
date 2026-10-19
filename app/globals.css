@@ -756,3 +756,21 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .financial-filters+div>svg{max-height:min(31vh,280px)}
 .financial-filters+div .table-wrap{margin-top:5px}
 .panel:has(.financial-filters)>.muted.small{font-size:11px;margin:8px 0 0}
+
+/* V97: workstation-consistent company controls and full-width financial charts */
+.company-switcher{width:100%;justify-content:space-between;gap:16px}
+.company-switcher-identity{font-size:14px;color:#e7effa;font-weight:750}
+.company-switcher>button{cursor:pointer;margin-left:auto;border:1px solid #344960;background:#172333;padding:7px 13px;color:#9bc9fa;font-size:12px;font-weight:650}
+.company-switcher>button span{margin-left:0;color:inherit}
+.company-switcher>button:hover{background:#25405c}
+.company-switcher form{margin-left:auto}
+.panel:has(.financial-filters){font-size:12px}
+.panel:has(.financial-filters)>h2{font-size:17px;margin-bottom:10px}
+.financial-filters{align-items:end;gap:10px}
+.financial-filters label,.financial-filters .date-range-group>span{font-size:12px}
+.financial-filters select,.financial-filters button,.date-range-group select{height:36px!important;min-height:36px!important;box-sizing:border-box;padding:6px 10px!important;font-size:12px!important;line-height:20px!important}
+.financial-filters .date-range-group{min-height:36px;box-sizing:border-box;padding:4px 8px}
+.financial-filters+div{width:100%}
+.financial-filters+div>svg{display:block;width:100%;height:auto;max-height:none}
+.financial-filters+div .stmt{font-size:12px}
+.technical-rsi svg{max-height:min(16vh,140px)}

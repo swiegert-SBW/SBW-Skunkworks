@@ -928,3 +928,24 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
   overflow-y:auto;
  }
 }
+
+/* V108: let the chart determine row height; sidebar ends flush with chart */
+@media (min-width:801px){
+ .watch-dashboard .watch-sidebar-stack{
+  height:auto;
+  min-height:0;
+  max-height:100%;
+  overflow:hidden;
+ }
+ .watch-dashboard .watch-sidebar-stack .watch-side-performance{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:100%;
+ }
+ .watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank{
+  height:0;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+ }
+}

@@ -1,7 +1,66 @@
 [
-  "Better you than me",
-  "We're not buying stocks for tomorrow",
-  "I am not going to stop you",
-  "Just need another set of eyes on it",
-  "Hope is not an investment strategy"
+  {
+    "text": "Better you than me",
+    "author": "Mike Wise"
+  },
+  {
+    "text": "We're not buying stocks for tomorrow",
+    "author": "Mike Wise"
+  },
+  {
+    "text": "I am not going to stop you",
+    "author": "Unknown CCO"
+  },
+  {
+    "text": "Just need another set of eyes on it",
+    "author": null
+  },
+  {
+    "text": "Hope is not an investment strategy",
+    "author": null
+  },
+  {
+    "text": "Price is what you pay. Value is what you get.",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "Be Fearful When Others Are Greedy and Greedy When Others Are Fearful",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "The most important thing to do if you find yourself in a hole is to stop digging.",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "Go to bed smarter than when you woke up.",
+    "author": "Charlie Munger"
+  },
+  {
+    "text": "Time is a friend to a good business and an enemy to a bad one",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+    "author": "Benjamin Graham"
+  },
+  {
+    "text": "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "Know what you own, and know why you own it.",
+    "author": "Peter Lynch"
+  },
+  {
+    "text": "It's not whether you're right or wrong that's important, but how much money you make when you're right and how much you lose when you're wrong.",
+    "author": "George Soros"
+  },
+  {
+    "text": "The big money is not in the buying and the selling, but in the waiting.",
+    "author": "Charlie Munger"
+  }
 ]

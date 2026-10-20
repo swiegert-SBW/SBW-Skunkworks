@@ -1,5 +1,5 @@
-import CompanySuggestions from "@/components/CompanySuggestions";
 "use client";
+import CompanySuggestions from "@/components/CompanySuggestions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

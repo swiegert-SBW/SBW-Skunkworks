@@ -6,6 +6,9 @@ export type Chart = {
   high52: number;
   low52: number;
   volume: number;
+  averageVolume?: number;
+  sharesOutstanding?: number;
+  floatShares?: number;
   open?: number;
   firstTradeDate?: number;
   dividendRate?: number;
@@ -33,6 +36,9 @@ export async function getChart(symbol: string, range = "1y", interval = "1d"): P
       high52: r.meta.fiftyTwoWeekHigh,
       low52: r.meta.fiftyTwoWeekLow,
       volume: r.meta.regularMarketVolume,
+      averageVolume: r.meta.averageDailyVolume3Month ?? r.meta.averageDailyVolume10Day,
+      sharesOutstanding: r.meta.sharesOutstanding,
+      floatShares: r.meta.floatShares,
       open: r.meta.regularMarketOpen ?? r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,
       firstTradeDate: r.meta.firstTradeDate,
       dividendRate: r.meta.trailingAnnualDividendRate ?? (r.events?.dividends ? (()=>{const dividends=Object.values(r.events.dividends) as {amount:number;date:number}[];const cutoff=Date.now()/1000-366*86400;const total=dividends.filter(d=>d.date>=cutoff).reduce((sum,d)=>sum+d.amount,0);return total>0?total:undefined})():undefined),

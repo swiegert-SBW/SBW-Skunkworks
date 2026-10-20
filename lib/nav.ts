@@ -14,7 +14,7 @@ export const NAV: NavSection[] = [
   },
   { id: "charts", label: "Charts", items: items([["price-chart", "Price Chart"], ["financial-chart", "Fundamental Charts"]]) },
   { id: "news", label: "News, Research, and Filings", items: items([["filings", "Filings"], ["news", "News"]]) },
-  { id: "ownership", label: "Ownership", items: items([["overview", "Ownership Overview"]]) },
+  { id: "ownership", label: "Ownership", items: items([["overview", "Overview"], ["short-interest", "Short Interest"]]) },
   { id: "financials", label: "Financials", items: items([["balance-sheet", "Balance Sheet"], ["income-statement", "Income Statement"], ["cash-flow", "Cash Flow"]]) },
   { id: "estimates", label: "Estimates", items: items([["consensus", "Consensus"]]) },
   { id: "credit", label: "Credit Analysis", items: items([["ratios", "Ratios"]]) },

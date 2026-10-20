@@ -862,3 +862,16 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .watch-performance-controls button:hover{background:#234464}
 @media(max-width:1100px){.watch-performance-body{grid-template-columns:minmax(0,1fr)}.watch-performance-rank{max-height:180px}}
 @media(max-width:800px){.watch-dashboard{grid-template-columns:1fr}.watch-dashboard .watch-list-panel,.watch-dashboard .watch-performance-panel,.watch-dashboard .watch-stocks-panel{grid-column:1;grid-row:auto}.sbw-terminal-brand{font-size:12px;letter-spacing:.13em}}
+
+/* V102 angular research terminal wordmark and elevated tree */
+.sbw-terminal-brand,.terminal-home-wordmark{font-family:"Bank Gothic","Microgramma","Eurostile","Arial Narrow",sans-serif;font-weight:300;letter-spacing:.22em;text-transform:uppercase;font-variant:small-caps;color:#eff9ff;text-shadow:0 0 12px rgba(76,184,255,.35)}
+.sbw-terminal-brand{font-size:17px;letter-spacing:.19em}
+.terminal-home-wordmark{font-size:clamp(17px,2.4vw,28px)!important;line-height:1.6;letter-spacing:.17em!important;margin:0 0 28px!important;overflow-wrap:normal}
+.terminal-corner-tree{margin-left:auto;object-fit:contain;flex-shrink:0;filter:brightness(3.5) contrast(1.3) saturate(1.6) drop-shadow(0 0 9px rgba(95,210,255,.9))}
+.watch-dashboard .watch-performance-rank{display:none}
+.watch-dashboard .watch-side-performance{grid-column:1;grid-row:2;display:block;max-height:500px}
+.watch-dashboard .watch-stocks-panel{grid-row:3}
+.watch-performance-body{grid-template-columns:minmax(0,1fr)}
+.watch-hover-tip{position:absolute;pointer-events:none;z-index:10;background:rgba(10,20,32,.96);border:1px solid #50749b;border-radius:5px;padding:8px 10px;color:#eff8ff;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap}
+.fundamental-hover-tip{position:absolute;pointer-events:none;z-index:5;background:#0d1928;border:1px solid #567aa0;border-radius:6px;padding:10px 12px;min-width:185px;color:#eef6ff;box-shadow:0 10px 25px #0008;font-size:12px}
+@media(max-width:800px){.watch-dashboard .watch-side-performance,.watch-dashboard .watch-stocks-panel{grid-row:auto}.terminal-corner-tree{width:32px;height:32px}.terminal-home-wordmark{letter-spacing:.09em!important}}

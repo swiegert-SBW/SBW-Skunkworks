@@ -1,5 +1,5 @@
-import CompanySuggestions from "@/components/CompanySuggestions";
 "use client";
+import CompanySuggestions from "@/components/CompanySuggestions";
 import {usePathname,useRouter} from "next/navigation";
 import {useEffect,useState} from "react";
 export default function CompanySwitcher({ticker}:{ticker:string}){

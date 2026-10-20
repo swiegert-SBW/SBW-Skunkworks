@@ -6,12 +6,13 @@ async function loadShort(ticker:string):Promise<Point[]>{
   const r=await fetch("https://api.nasdaq.com/api/quote/"+encodeURIComponent(ticker.toUpperCase())+"/short-interest?assetclass=stocks",{headers:{"User-Agent":"Mozilla/5.0","Accept":"application/json","Origin":"https://www.nasdaq.com"},next:{revalidate:86400},signal:AbortSignal.timeout(7000)});
   if(!r.ok)return [];const j=await r.json();const rows=j?.data?.shortInterestTable?.rows??j?.data?.rows??[];
   if(!Array.isArray(rows))return [];
-  const n=(v:any)=>{const x=Number(String(v??"").replace(/[^0-9.\-]/g,""));return Number.isFinite(x)?x:null};
+  const n=(v:any)=>{if(v===null||v===undefined||String(v).trim()==="")return null;const x=Number(String(v).replace(/[^0-9.\-]/g,""));return Number.isFinite(x)?x:null};
   return rows.map((r:any)=>({date:String(r.settlementDate??r.date??""),shares:n(r.interest??r.shortInterest??r.shortInterestShares),days:n(r.daysToCover??r.avgDailyShareVolumeRatio),percent:n(r.percentOfFloat??r.shortPercentFloat)})).filter((x:{date:string;shares:number|null;days:number|null;percent:number|null}):x is Point=>Boolean(x.date)&&x.shares!==null).reverse();
  }catch{return []}
 }
 export default async function ShortInterest({ticker}:{ticker:string}){
- const [history,chart]=await Promise.all([loadShort(ticker),getChart(ticker,"1mo")]);
+ const [historyRaw,chart]=await Promise.all([loadShort(ticker),getChart(ticker,"1mo")]);
+ const history=historyRaw.map(p=>({...p,percent:p.percent??(chart?.floatShares&&chart.floatShares>0?p.shares/chart.floatShares*100:null)}));
  const last=history.at(-1),prev=history.at(-2);
  const change=last&&prev&&prev.shares?((last.shares/prev.shares)-1)*100:null;
  const fields:[string,string][]=[
@@ -30,6 +31,6 @@ export default async function ShortInterest({ticker}:{ticker:string}){
  <div className="panel"><h2 style={{margin:"0 0 6px"}}>Short Interest · {ticker}</h2><p className="muted small">Exchange-reported short interest, not daily short-sale volume. Reporting generally occurs twice monthly; data may be delayed.</p></div>
  <div className="panel" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"8px 28px"}}>{fields.map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"9px 0",borderBottom:"1px solid var(--border,#263547)",fontSize:13}}><span className="muted">{k}</span><strong style={{textAlign:"right"}}>{v}</strong></div>)}</div>
  <ShortInterestChart history={history} price={chart?.price??null}/>
- <div className="panel"><p className="muted small">Source: Nasdaq public short-interest endpoint when accessible. Short interest represents shares outstanding short at a reporting date; dollar value is an approximation using the latest available share price. Data availability varies by security.</p></div>
+ <div className="panel"><p className="muted small">Source: Nasdaq public short-interest endpoint when accessible. Short percent of float is calculated when float shares are available. Short interest represents shares outstanding short at a reporting date; dollar value is an approximation using the latest available share price. Data availability varies by security.</p></div>
  </div>;
 }

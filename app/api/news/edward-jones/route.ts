@@ -1,7 +1,6 @@
 import {NextResponse} from "next/server";
 export const runtime="nodejs";
-export const dynamic="force-dynamic";
-export const revalidate=0;
+export const revalidate=1800;
 const SOURCE="https://www.edwardjones.com/us-en/market-news-insights/stock-market-news/daily-market-recap";
 const decode=(s:string)=>s.replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&rsquo;|&#8217;/gi,"’").replace(/&ndash;|&#8211;/gi,"–").replace(/&mdash;|&#8212;/gi,"—").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n))).replace(/\s+/g," ").trim();
 const plain=(s:string)=>decode(s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," "));
@@ -39,10 +38,10 @@ function summary(entries:Entry[]):string{
 
 export async function GET(){
  try{
-  const r=await fetch(SOURCE,{headers:{"User-Agent":"Mozilla/5.0","Accept":"text/html"},cache:"no-store",signal:AbortSignal.timeout(12000)});
+  const r=await fetch(SOURCE,{headers:{"User-Agent":"Mozilla/5.0","Accept":"text/html"},next:{revalidate:1800},signal:AbortSignal.timeout(5000)});
   if(!r.ok)return NextResponse.json({error:"Edward Jones unavailable"},{status:502});
   const {date,entries}=extract(await r.text());
   if(entries.length<2)return NextResponse.json({error:"Could not identify the latest recap bullet points"},{status:502});
-  return NextResponse.json({summary:summary(entries),entries:entries.map(({heading,detail})=>({heading,detail})),date,url:SOURCE},{headers:{"Cache-Control":"no-store, no-cache, max-age=0, must-revalidate"}});
+  return NextResponse.json({summary:summary(entries),entries:entries.map(({heading,detail})=>({heading,detail})),date,url:SOURCE},{headers:{"Cache-Control":"public, s-maxage=1800, stale-while-revalidate=3600"}});
  }catch{return NextResponse.json({error:"Recap retrieval failed"},{status:502})}
 }

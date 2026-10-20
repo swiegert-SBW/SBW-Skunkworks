@@ -24,6 +24,9 @@ export async function getChart(symbol: string, range = "1y", interval = "1d"): P
     const r = (await res.json())?.chart?.result?.[0];
     if (!r) return null;
     const closes: (number | null)[] = r.indicators.quote[0].close;
+    const volumes: (number | null)[] = r.indicators.quote[0].volume ?? [];
+    const recentVolumes=volumes.filter((v):v is number=>typeof v==="number"&&Number.isFinite(v)&&v>0).slice(-60);
+    const calculatedAverage=recentVolumes.length?Math.round(recentVolumes.reduce((a,b)=>a+b,0)/recentVolumes.length):undefined;
     const points = r.timestamp
       .map((t: number, i: number) => ({ t, c: closes[i] }))
       .filter((p: { t: number; c: number | null }) => p.c != null) as { t: number; c: number }[];
@@ -36,7 +39,7 @@ export async function getChart(symbol: string, range = "1y", interval = "1d"): P
       high52: r.meta.fiftyTwoWeekHigh,
       low52: r.meta.fiftyTwoWeekLow,
       volume: r.meta.regularMarketVolume,
-      averageVolume: r.meta.averageDailyVolume3Month ?? r.meta.averageDailyVolume10Day,
+      averageVolume: r.meta.averageDailyVolume3Month ?? r.meta.averageDailyVolume10Day ?? calculatedAverage,
       sharesOutstanding: r.meta.sharesOutstanding,
       floatShares: r.meta.floatShares,
       open: r.meta.regularMarketOpen ?? r.indicators?.quote?.[0]?.open?.at(-1) ?? undefined,

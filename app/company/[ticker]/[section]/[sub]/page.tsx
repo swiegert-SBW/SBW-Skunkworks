@@ -9,11 +9,13 @@ import StatementView from "@/components/StatementView";
 import FilingsView from "@/components/FilingsView";
 import CompanyNews from "@/components/CompanyNews";
 import ConsensusEstimates from "@/components/ConsensusEstimates";
+import OwnershipOverview from "@/components/OwnershipOverview";
 export default async function SubPage({params,searchParams}:{params:Promise<{ticker:string;section:string;sub:string}>;searchParams:Promise<{period?:string;range?:string}>}){
  const [{ticker,section:sectionId,sub},query]=await Promise.all([params,searchParams]);
  const section=NAV.find(s=>s.id===sectionId),item=section?.items.find(i=>i.id===sub);
  if(!section||!item)notFound();
  const symbol=ticker.toUpperCase();
+ if(section.id==="ownership")return <OwnershipOverview ticker={symbol}/>;
  if(section.id==="estimates"&&item.id==="consensus")return <ConsensusEstimates ticker={symbol}/>;
  if(section.id==="charts"&&item.id==="price-chart")return <TechnicalPriceChart key={symbol} ticker={symbol}/>;
  if(section.id==="charts"&&item.id==="financial-chart")return <Suspense fallback={<div className="panel">Loading SEC financial data…</div>}><FinancialChartsData ticker={symbol}/></Suspense>;

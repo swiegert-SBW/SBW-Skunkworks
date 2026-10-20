@@ -895,3 +895,13 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .watch-dashboard .watch-performance-panel{grid-column:2;grid-row:1}
 .watch-dashboard .watch-stocks-panel{grid-column:1/-1;grid-row:2}
 @media(max-width:800px){.watch-dashboard .watch-sidebar-stack,.watch-dashboard .watch-performance-panel,.watch-dashboard .watch-stocks-panel{grid-column:1;grid-row:auto}.terminal-corner-tree{width:40px!important;height:40px!important}.terminal-wordmark-header{min-width:145px}}
+
+
+/* V104: compact scrolling performance list and subtle wordmark */
+.news-quote-author{font-style:normal;color:#a9c9e9;font-size:.9em;white-space:nowrap}
+.watch-dashboard .watch-sidebar-stack{align-self:start;gap:6px}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance{flex:0 0 auto;max-height:300px;min-height:0;overflow:hidden}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank{max-height:245px!important;overflow-y:scroll;scrollbar-width:thin;scrollbar-color:#4d7294 #131d29}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank thead{position:sticky;top:0;background:#141c27;z-index:1}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank::-webkit-scrollbar{width:8px}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank::-webkit-scrollbar-thumb{background:#4d7294;border-radius:8px}

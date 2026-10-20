@@ -1,7 +1,7 @@
 import {getChart} from "@/lib/market";
 import PerformanceChart from "@/components/PerformanceChart";
 export default async function SnapshotMarket({ticker}:{ticker:string}){
- const [stock,spx]=await Promise.all([getChart(ticker,"1y"),getChart("^GSPC","1y")]);
+ const [stock,spx]=await Promise.all([getChart(ticker,"max"),getChart("^GSPC","max")]);
  const stats:[string,string][]=[
  ["Ticker",ticker],["Price",stock?"$"+stock.price.toFixed(2):"N/A"],["Open",typeof stock?.open==="number"?"$"+stock.open.toFixed(2):"N/A"],
  ["Previous Close",stock?"$"+stock.prevClose.toFixed(2):"N/A"],

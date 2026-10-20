@@ -14,8 +14,8 @@ export default function NewsPage(){
  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem(SOURCE_KEY)||"null");if(Array.isArray(saved))setSources(saved.filter((s:string)=>SOURCES.includes(s)))}catch{};try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v)){setLists(v);setSelected(localStorage.getItem(SELECTED)||v[0]?.id||"")}}catch{}},[]);
  const current=lists.find(x=>x.id===selected)||lists[0];
  const tickers=(current?.tickers||[]).join(",");
- useEffect(()=>{let alive=true;setLoading(true);setError("");const controller=new AbortController();
- fetch("/api/news?"+new URLSearchParams({tickers}),{signal:controller.signal,cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("News sources are temporarily unavailable");return r.json()}).then(d=>{if(alive)setData(d)}).catch(e=>{if(alive)setError(e.message||"Unable to load news")}).finally(()=>{if(alive)setLoading(false)});
+ useEffect(()=>{let alive=true;setLoading(!data);setError("");const controller=new AbortController();
+ fetch("/api/news?"+new URLSearchParams({tickers}),{signal:controller.signal,cache:"default"}).then(async r=>{if(!r.ok)throw Error("News sources are temporarily unavailable");return r.json()}).then(d=>{if(alive)setData(d)}).catch(e=>{if(alive)setError(e.message||"Unable to load news")}).finally(()=>{if(alive)setLoading(false)});
  return()=>{alive=false;controller.abort()};},[tickers,refresh]);
  const change=(id:string)=>{setSelected(id);localStorage.setItem(SELECTED,id);window.dispatchEvent(new Event("sbw-watchlists-updated"))};
  const toggleSource=(name:string)=>setSources(prev=>{const next=prev.includes(name)?prev.filter(s=>s!==name):[...prev,name];localStorage.setItem(SOURCE_KEY,JSON.stringify(next));return next});
@@ -25,7 +25,7 @@ export default function NewsPage(){
  const dailyQuote=quotes.length?quotes[quoteSeed%quotes.length]:"";
  const [recapLoading,setRecapLoading]=useState(true);
  const [recap,setRecap]=useState<{summary:string;entries?:{heading:string;detail:string}[];url:string;date?:string}|null>(null);
- useEffect(()=>{let alive=true;const controller=new AbortController();setRecapLoading(true);fetch("/api/news/edward-jones",{signal:controller.signal,cache:"no-store"}).then(async r=>r.ok?r.json():null).then(d=>{if(alive)setRecap(d?.summary?d:null)}).catch(()=>{if(alive)setRecap(null)}).finally(()=>{if(alive)setRecapLoading(false)});return()=>{alive=false;controller.abort()}},[refresh]);
+ useEffect(()=>{let alive=true;const controller=new AbortController();setRecapLoading(true);fetch("/api/news/edward-jones",{signal:controller.signal,cache:"default"}).then(async r=>r.ok?r.json():null).then(d=>{if(alive)setRecap(d?.summary?d:null)}).catch(()=>{if(alive)setRecap(null)}).finally(()=>{if(alive)setRecapLoading(false)});return()=>{alive=false;controller.abort()}},[refresh]);
  const digest=recap?.summary||"";
  const filteredCompanies=(data?.companies||[]).filter(s=>sources.includes(sourceName(s.source)));
  // M.A.R.K. only displays the Edward Jones recap, never a generated headline digest.

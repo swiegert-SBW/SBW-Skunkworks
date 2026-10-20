@@ -10,6 +10,9 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start
     autoDeploy: true
+    buildFilter:
+      ignoredPaths:
+        - data/short-interest/**
     envVars:
       - key: NODE_ENV
         value: production

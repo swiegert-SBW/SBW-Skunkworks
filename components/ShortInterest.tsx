@@ -6,7 +6,7 @@ async function loadShort(ticker:string):Promise<Point[]>{
   if(!r.ok)return [];const j=await r.json();const rows=j?.data?.shortInterestTable?.rows??j?.data?.rows??[];
   if(!Array.isArray(rows))return [];
   const n=(v:any)=>{const x=Number(String(v??"").replace(/[^0-9.\-]/g,""));return Number.isFinite(x)?x:null};
-  return rows.map((r:any)=>({date:String(r.settlementDate??r.date??""),shares:n(r.interest??r.shortInterest??r.shortInterestShares),days:n(r.daysToCover??r.avgDailyShareVolumeRatio),percent:n(r.percentOfFloat??r.shortPercentFloat)})).filter((x:any)=>x.date&&x.shares!==null).reverse();
+  return rows.map((r:any)=>({date:String(r.settlementDate??r.date??""),shares:n(r.interest??r.shortInterest??r.shortInterestShares),days:n(r.daysToCover??r.avgDailyShareVolumeRatio),percent:n(r.percentOfFloat??r.shortPercentFloat)})).filter((x:{date:string;shares:number|null;days:number|null;percent:number|null}):x is Point=>Boolean(x.date)&&x.shares!==null).reverse();
  }catch{return []}
 }
 export default async function ShortInterest({ticker}:{ticker:string}){

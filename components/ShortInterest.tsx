@@ -12,8 +12,9 @@ async function loadShort(ticker:string):Promise<Point[]>{
  }catch{return []}
 }
 export default async function ShortInterest({ticker}:{ticker:string}){
- const [live,saved,chart]=await Promise.all([loadShort(ticker),getArchivedShortInterest(ticker),getChart(ticker,"1mo")]);
- const historyRaw=Array.from(new Map([...saved,...live].map(p=>[p.date,p])).values()).sort((a,b)=>new Date(a.date).getTime()-new Date(b.date).getTime());
+ const [live,saved,chart]=await Promise.all([loadShort(ticker),getArchivedShortInterest(ticker),getChart(ticker,"3mo")]);
+ const normalized=(p:Point)=>{const d=new Date(p.date);return {...p,date:Number.isFinite(d.getTime())?d.toISOString().slice(0,10):p.date}};
+ const historyRaw=Array.from(new Map([...saved,...live].map(p=>{const point=normalized(p);return [point.date,point]})).values()).sort((a,b)=>a.date.localeCompare(b.date));
  const history=historyRaw.map(p=>({...p,percent:p.percent??(chart?.floatShares&&chart.floatShares>0?p.shares/chart.floatShares*100:null)}));
  const last=history.at(-1),prev=history.at(-2);
  const change=last&&prev&&prev.shares?((last.shares/prev.shares)-1)*100:null;

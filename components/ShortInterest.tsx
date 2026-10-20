@@ -1,5 +1,6 @@
 import {getChart} from "@/lib/market";
 import ShortInterestChart from "@/components/ShortInterestChart";
+import {getArchivedShortInterest} from "@/lib/short-interest-archive";
 type Point={date:string;shares:number;days:number|null;percent:number|null};
 async function loadShort(ticker:string):Promise<Point[]>{
  try{
@@ -11,7 +12,8 @@ async function loadShort(ticker:string):Promise<Point[]>{
  }catch{return []}
 }
 export default async function ShortInterest({ticker}:{ticker:string}){
- const [historyRaw,chart]=await Promise.all([loadShort(ticker),getChart(ticker,"1mo")]);
+ const [live,saved,chart]=await Promise.all([loadShort(ticker),getArchivedShortInterest(ticker),getChart(ticker,"1mo")]);
+ const historyRaw=Array.from(new Map([...saved,...live].map(p=>[p.date,p])).values()).sort((a,b)=>new Date(a.date).getTime()-new Date(b.date).getTime());
  const history=historyRaw.map(p=>({...p,percent:p.percent??(chart?.floatShares&&chart.floatShares>0?p.shares/chart.floatShares*100:null)}));
  const last=history.at(-1),prev=history.at(-2);
  const change=last&&prev&&prev.shares?((last.shares/prev.shares)-1)*100:null;

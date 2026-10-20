@@ -2,6 +2,7 @@
 // The SEC asks for a User-Agent with your contact info, and allows ~10 requests/second.
 
 const UA = process.env.SEC_USER_AGENT || "FinSight contact@example.com";
+import {cache} from "react";
 const HOUR = 3600;
 
 async function secFetch(url: string, revalidate = HOUR) {
@@ -31,10 +32,10 @@ async function loadTickerIndex(){
  }).finally(()=>{tickerIndexPending=null});
  return tickerIndexPending;
 }
-export async function lookupTicker(ticker:string):Promise<Company|null>{
+export const lookupTicker=cache(async function lookupTicker(ticker:string):Promise<Company|null>{
  const symbol=decodeURIComponent(ticker).toUpperCase();
  try{return (await loadTickerIndex()).get(symbol)??null;}catch{return tickerIndex?.get(symbol)??null;}
-}
+});
 
 // Company profile + list of recent filings.
 export async function getSubmissions(cik: string) {

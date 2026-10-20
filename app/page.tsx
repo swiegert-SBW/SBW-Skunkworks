@@ -19,9 +19,7 @@ export default function Home() {
           <div className="home-orbit-satellites" aria-hidden="true"><span className="home-orbit-track home-orbit-track-one"><i /></span><span className="home-orbit-track home-orbit-track-two"><i /></span></div>
           <div className="home-card">
             <img className="home-watermark-logo" src="/SBW%20Tree%20Logo.png" alt="" aria-hidden="true" />
-            <div className="home-eyebrow"><span /> SBW RESEARCH TERMINAL</div>
-            <h1 id="lookup-title">Look up a company</h1>
-            <p className="muted">Explore company snapshots, financial statements, and SEC filings.</p>
+            <h1 id="lookup-title" className="terminal-home-wordmark">SBW RESEARCH TERMINAL</h1>
             <SearchBox variant="large" />
             <div className="home-quick-links">
               <span>QUICK ACCESS</span>

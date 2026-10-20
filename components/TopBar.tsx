@@ -42,8 +42,9 @@ export default function TopBar() {
   return (
     <header>
       <div className="topbar">
-        {pathname!=="/"&&<Link href="/" className="brand sbw-terminal-brand"><span>SBW RESEARCH TERMINAL</span><img src="/SBW%20Tree%20Logo.png" alt="" width={30} height={30}/></Link>}
+        {pathname!=="/"&&<Link href="/" className="brand sbw-terminal-brand"><span>SBW RESEARCH TERMINAL</span></Link>}
         <SearchBox variant="pill" />
+        {pathname!=="/"&&<img className="terminal-corner-tree" src="/SBW%20Tree%20Logo.png" alt="SBW tree" width={46} height={46}/>}
       </div>
       <nav className="mainnav" aria-label="Main">
         {NAV.map((n) => {

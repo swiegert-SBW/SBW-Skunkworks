@@ -1,0 +1,12 @@
+"use client";
+import {useMemo,useState} from "react";
+type Trade=Record<string,unknown>;
+const val=(r:Trade,...keys:string[])=>{for(const k of keys){const x=r[k];if(x!==null&&x!==undefined&&String(x).trim())return String(x)}return "N/A"};
+export default function InsiderTrades({trades}:{trades:Trade[]}){
+ const [query,setQuery]=useState("");
+ const names=useMemo(()=>Array.from(new Set(trades.map(t=>val(t,"name_insider","insider_name")).filter(x=>x!=="N/A"))).sort(),[trades]);
+ const filtered=useMemo(()=>trades.filter(t=>!query||val(t,"name_insider","insider_name")===query),[trades,query]);
+ const cell:React.CSSProperties={padding:"10px 12px",borderBottom:"1px solid var(--border,#283447)",textAlign:"left",fontSize:12};
+ const actions:Record<string,string>={P:"Open-market purchase",S:"Sale",F:"Tax withholding",M:"Option exercise",A:"Grant / award",G:"Gift",D:"Disposition",C:"Conversion",J:"Other transaction",I:"Discretionary transaction"};
+ return <div className="panel"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginBottom:12}}><h3 style={{fontSize:14,margin:0}}>Recent Insider Buying &amp; Selling</h3><select aria-label="Filter insider by name" value={query} onChange={e=>setQuery(e.target.value)} style={{padding:"8px",background:"var(--panel,#161b22)",color:"inherit",border:"1px solid #465164",borderRadius:5}}><option value="">All insiders</option>{names.map(n=><option key={n} value={n}>{n}</option>)}</select></div><div style={{maxHeight:470,overflow:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Insider","Transaction Date","Action","Shares","Price"].map(x=><th key={x} style={{...cell,position:"sticky",top:0,background:"var(--panel,#161b22)"}}>{x}</th>)}</tr></thead><tbody>{filtered.slice(0,10).map((t,i)=>{const code=val(t,"transaction_code","code").toUpperCase();return <tr key={i}><td style={cell}>{val(t,"name_insider","insider_name")}</td><td style={cell}>{val(t,"transaction_date","transactiondate").slice(0,10)}</td><td style={cell}>{actions[code]??code}</td><td style={cell}>{val(t,"shares_bought_adjusted","shares_sold_adjusted","shares","shares_transacted")}</td><td style={cell}>{val(t,"price_adjusted","price")}</td></tr>})}</tbody></table>{filtered.length===0&&<p className="muted small">No matching insider transactions available.</p>}</div><p className="muted small">Showing {Math.min(filtered.length,10)} of {filtered.length} transactions. F = tax withholding, not an open-market sale.</p></div>;
+}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import SearchBox from "./SearchBox";
+import TerminalWordmark from "./TerminalWordmark";
 
 const NAV = [
   { label: "Today's Top News", href: "/news" },
@@ -42,7 +43,7 @@ export default function TopBar() {
   return (
     <header>
       <div className="topbar">
-        {pathname!=="/"&&<Link href="/" className="brand sbw-terminal-brand"><span>SBW RESEARCH TERMINAL</span></Link>}
+        {pathname!=="/"&&<Link href="/" className="brand sbw-terminal-brand"><TerminalWordmark/></Link>}
         <SearchBox variant="pill" />
         {pathname!=="/"&&<img className="terminal-corner-tree" src="/SBW%20Tree%20Logo.png" alt="SBW tree" width={46} height={46}/>}
       </div>

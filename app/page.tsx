@@ -1,6 +1,7 @@
 import SearchBox from "@/components/SearchBox";
 import Link from "next/link";
 import AsciiMoon from "@/components/AsciiMoon";
+import TerminalWordmark from "@/components/TerminalWordmark";
 
 export default function Home() {
   return (
@@ -19,7 +20,7 @@ export default function Home() {
           <div className="home-orbit-satellites" aria-hidden="true"><span className="home-orbit-track home-orbit-track-one"><i /></span><span className="home-orbit-track home-orbit-track-two"><i /></span></div>
           <div className="home-card">
             <img className="home-watermark-logo" src="/SBW%20Tree%20Logo.png" alt="" aria-hidden="true" />
-            <h1 id="lookup-title" className="terminal-home-wordmark">SBW RESEARCH TERMINAL</h1>
+            <h1 id="lookup-title" className="terminal-home-wordmark"><TerminalWordmark landing/></h1>
             <SearchBox variant="large" />
             <div className="home-quick-links">
               <span>QUICK ACCESS</span>

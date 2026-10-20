@@ -875,3 +875,23 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 .watch-hover-tip{position:absolute;pointer-events:none;z-index:10;background:rgba(10,20,32,.96);border:1px solid #50749b;border-radius:5px;padding:8px 10px;color:#eff8ff;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap}
 .fundamental-hover-tip{position:absolute;pointer-events:none;z-index:5;background:#0d1928;border:1px solid #567aa0;border-radius:6px;padding:10px 12px;min-width:185px;color:#eef6ff;box-shadow:0 10px 25px #0008;font-size:12px}
 @media(max-width:800px){.watch-dashboard .watch-side-performance,.watch-dashboard .watch-stocks-panel{grid-row:auto}.terminal-corner-tree{width:32px;height:32px}.terminal-home-wordmark{letter-spacing:.09em!important}}
+
+
+/* V103 bespoke space lettering and aligned watchlist panels */
+.terminal-wordmark{display:inline-flex;align-items:center;color:#e6f3ff;filter:drop-shadow(0 0 5px rgba(112,205,255,.26))}
+.terminal-wordmark-line{display:block;width:100%;height:auto;overflow:visible}
+.terminal-wordmark-header{width:min(31vw,325px);min-width:190px}
+.terminal-wordmark-home{width:min(100%,460px);display:flex;flex-direction:column;align-items:center;gap:5px;margin:0 auto}
+.terminal-wordmark-home .terminal-wordmark-line:first-child{width:27%}
+.terminal-wordmark-home .terminal-wordmark-line:nth-child(2){width:91%}
+.terminal-wordmark-home .terminal-wordmark-line:nth-child(3){width:91%}
+.terminal-home-wordmark{display:flex;justify-content:center;margin:0 0 28px!important}
+.terminal-corner-tree{width:66px!important;height:66px!important;filter:brightness(5) contrast(1.65) saturate(2) drop-shadow(0 0 13px rgba(118,218,255,.95))!important}
+.watch-dashboard{grid-template-columns:minmax(215px,250px) minmax(0,1fr);align-items:stretch}
+.watch-dashboard .watch-sidebar-stack{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;min-height:0}
+.watch-dashboard .watch-sidebar-stack .watch-list-panel{grid-column:auto;grid-row:auto;flex:0 0 auto;margin:0}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance{grid-column:auto;grid-row:auto;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;margin:0;max-height:none}
+.watch-dashboard .watch-sidebar-stack .watch-side-performance .watch-performance-rank{display:block;max-height:none!important;min-height:0;flex:1 1 auto;overflow-y:auto}
+.watch-dashboard .watch-performance-panel{grid-column:2;grid-row:1}
+.watch-dashboard .watch-stocks-panel{grid-column:1/-1;grid-row:2}
+@media(max-width:800px){.watch-dashboard .watch-sidebar-stack,.watch-dashboard .watch-performance-panel,.watch-dashboard .watch-stocks-panel{grid-column:1;grid-row:auto}.terminal-corner-tree{width:40px!important;height:40px!important}.terminal-wordmark-header{min-width:145px}}

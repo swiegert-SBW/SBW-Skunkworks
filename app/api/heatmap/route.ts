@@ -1,3 +1,4 @@
+import universe from "@/data/watchlist-universe.json";
 import {NextRequest,NextResponse} from "next/server";
 const SP="NVDA MSFT AAPL AMZN GOOGL META AVGO BRK-B LLY JPM TSLA WMT V XOM MA COST ORCL JNJ HD PG NFLX ABBV BAC CRM CVX KO AMD MRK WFC CSCO ACN PEP LIN ADBE MCD TMO IBM GE QCOM TXN INTU CAT AMGN DIS PM VZ NOW UBER ISRG SPGI AXP RTX T BKNG NEE PFE LOW HON UNH COP GS DE BLK PLTR PANW ANET MU KLAC SNPS CDNS CRWD SHOP ADP MDT SYK GILD VRTX TJX NKE F GM UPS NEM FCX EOG SLB DUK SO PLD AMT EQIX C COIN ABNB DASH DELL APH CEG APP ARM";
 const NAS="NVDA MSFT AAPL AMZN GOOGL META AVGO TSLA COST NFLX AMD PEP CSCO ADBE QCOM TXN INTU AMGN ISRG BKNG INTC AMAT MU LRCX KLAC SNPS CDNS PANW CRWD PLTR ADP SBUX GILD VRTX REGN MDLZ ADI MELI ORLY CTAS MAR ABNB DASH FTNT MRVL WDAY TEAM DDOG ZS MDB SHOP PYPL PDD ARM APP COIN HOOD CEG LIN HON CMCSA TMUS VRSK PAYX CPRT FAST PCAR ROST ODFL EA TTD IDXX DXCM EXC XEL KDP CSX ON MCHP NXPI ANSS ILMN BIIB MRNA ALNY GEHC TTWO LULU AEP BKR AZN GFS";
@@ -69,15 +70,17 @@ export async function GET(req: NextRequest) {
  const tiles:any[]=[];
  for(let start=0;start<page.length;start+=10){
  const chunk=await Promise.all(page.slice(start,start+10).map(async ticker=>{
-  const q=quoteMap[ticker]||quoteMap[ticker.replace(/-/g,".")],info=INFO[ticker];
+  const alias=(universe.aliases as Record<string,{quote?:string;name?:string}>)[ticker];
+  const quoteTicker=alias?.quote??ticker;
+  const q=quoteMap[quoteTicker]||quoteMap[ticker]||quoteMap[ticker.replace(/-/g,".")],info=INFO[ticker];
   let d:any=sparkMap[ticker]?.response?.[0]||sparkMap[ticker]?.chart?.result?.[0]||null;
   if(!d&&!q)try {
    // Chart endpoint supplies a quote even when the bulk endpoint returns nothing.
-   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(4500),next:{revalidate:300}});
+   const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(quoteTicker)+"?range="+(period==="1d"?"5d":period)+"&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(4500),next:{revalidate:300}});
    if(r.ok)d=(await r.json())?.chart?.result?.[0];
   }catch{}
   if(!d&&!q){
-   try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(ticker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(3500),next:{revalidate:300}});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
+   try{const r=await fetch("https://query2.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(quoteTicker)+"?range=5d&interval=1d",{headers:{"User-Agent":"Mozilla/5.0"},signal:AbortSignal.timeout(3500),next:{revalidate:300}});if(r.ok)d=(await r.json())?.chart?.result?.[0];}catch{}
   }
   const sparkCloses=(d?.indicators?.quote?.[0]?.close||[]).filter((v:any)=>typeof v==="number"&&Number.isFinite(v));
   const price=Number(q?.regularMarketPrice??d?.meta?.regularMarketPrice??sparkCloses[sparkCloses.length-1]);
@@ -89,7 +92,7 @@ export async function GET(req: NextRequest) {
   const rawSector=String(q?.sector||info?.[1]||"Other");
   const sector=sectorMap[rawSector]||rawSector;
   const knownSectors=["Communication Services","Consumer Discretionary","Consumer Staples","Energy","Financials","Health Care","Industrials","Information Technology","Materials","Real Estate","Utilities"];
-  return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
+  return {ticker,name:q?.longName||q?.shortName||d?.meta?.longName||d?.meta?.shortName||companyNames[ticker]||alias?.name||info?.[0]||ticker,sector:knownSectors.includes(sector)?sector:"Other",marketCap:Number(q?.marketCap)||info?.[2]||1,change:hasQuote?(price/base-1)*100:0,price:hasQuote?price:null,quoteAvailable:hasQuote};
  }));
  tiles.push(...chunk);
  }

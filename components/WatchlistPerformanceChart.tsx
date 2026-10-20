@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 type Point={t:number;c:number};
 type Line={ticker:string;points:Point[]};
-const ranges=[["1M","1mo"],["3M","3mo"],["6M","6mo"],["1Y","1y"],["3Y","3y"],["5Y","5y"],["10Y","10y"],["15Y","15y"]] as const;
+const ranges=[["1M","1mo"],["3M","3mo"],["6M","6mo"],["YTD","ytd"],["1Y","1y"],["3Y","3y"],["5Y","5y"],["10Y","10y"],["15Y","15y"]] as const;
 const colors=["#37ce7c","#4b9fff","#ffc14d","#f17d87","#b590ef","#34d1cf","#ff8c44","#c5e867","#f378d1","#8cc0ff"];
 export default function WatchlistPerformanceChart({tickers,tableOnly=false,selectedTicker,onSelectTicker,selectedRange,onSelectRange}:{tickers:string[];tableOnly?:boolean;selectedTicker?:string|null;onSelectTicker?:(ticker:string|null)=>void;selectedRange?:string;onSelectRange?:(range:string)=>void}){
  const [pointer,setPointer]=useState<{x:number;y:number}|null>(null);const [activeTicker,setActiveTicker]=useState<string|null>(null);const [range,setRange]=useState("3mo"),[lines,setLines]=useState<Line[]>([]),[excluded,setExcluded]=useState<string[]>([]),[entry,setEntry]=useState(""),[loading,setLoading]=useState(false),[hover,setHover]=useState<number|null>(null);

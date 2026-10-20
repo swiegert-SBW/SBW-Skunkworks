@@ -48,12 +48,12 @@ export default function AsciiMoon(){
   let lastCycle=-1;
   const sync=()=>{
    if(document.hidden)return;
-   const animation=blastRef.current?.getAnimations().find(a=>(a.effect as KeyframeEffect|null)?.getTiming().duration===30000);
+   const animation=blastRef.current?.getAnimations().find(a=>(a.effect as KeyframeEffect|null)?.getTiming().duration===900000);
    if(!animation)return;
    const time=Number(animation.currentTime);
    if(!Number.isFinite(time))return;
-   const cycle=Math.floor(time/30000);
-   const progress=(time%30000)/30000;
+   const cycle=Math.floor(time/900000);
+   const progress=(time%900000)/900000;
    if(lastCycle<0){lastCycle=cycle;return}
    if(progress>=.823&&progress<.838&&lastCycle===cycle){
     lastCycle=cycle+1;

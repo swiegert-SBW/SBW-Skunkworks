@@ -10,7 +10,7 @@ const publisherQuery="(site:cnbc.com OR site:barrons.com OR site:wsj.com OR site
 async function feed(query:string,limit:number):Promise<Story[]>{
  const url="https://news.google.com/rss/search?"+new URLSearchParams({q:query,hl:"en-US",gl:"US",ceid:"US:en"});
  try{
-  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0"},next:{revalidate:600},signal:AbortSignal.timeout(11000)});
+  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0"},next:{revalidate:600},signal:AbortSignal.timeout(4500)});
   if(!r.ok)return [];
   const xml=await r.text();
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0,limit*3).map(m=>{
@@ -28,7 +28,7 @@ export async function GET(req:NextRequest){
  const names=directory as Record<string,string>;
  const shortName=(t:string)=>String(names[t]||names[t.replace(/-/g,".")]||"").replace(/\b(Inc\.?|Corporation|Corp\.?|Ltd\.?|Limited|PLC|Co\.?|Class [A-Z]|Common Stock|Holdings?)\b/gi," ").replace(/[^a-zA-Z0-9 ]/g," ").replace(/\s+/g," ").trim();
  const searchTerms=symbols.map(t=>({ticker:t,name:shortName(t)}));
- const batches:typeof searchTerms[]=[];for(let i=0;i<searchTerms.length;i+=4)batches.push(searchTerms.slice(i,i+4));
+ const batches:typeof searchTerms[]=[];for(let i=0;i<searchTerms.length;i+=12)batches.push(searchTerms.slice(i,i+12));
  const [market,...companyGroups]=await Promise.all([
   feed("(stock market OR Wall Street OR Federal Reserve OR inflation OR economy) when:1d",24),
   ...batches.map(async batch=>{
@@ -55,7 +55,7 @@ export async function GET(req:NextRequest){
  let calendarSource="XOOMAR",calendarStatus="unavailable";
  try{
   const url="https://xoomar.com/api/markets/calendar?"+new URLSearchParams({from:startDay,to:endDay});
-  const r=await fetch(url,{next:{revalidate:900},signal:AbortSignal.timeout(10000)});
+  const r=await fetch(url,{next:{revalidate:900},signal:AbortSignal.timeout(4500)});
   if(r.ok){
    const json=await r.json();
    if(Array.isArray(json.data)){

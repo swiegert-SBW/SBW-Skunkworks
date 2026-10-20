@@ -42,7 +42,7 @@ export default function TopBar() {
   return (
     <header>
       <div className="topbar">
-        <Link href="/" className="brand">SBW Workstation</Link>
+        {pathname!=="/"&&<Link href="/" className="brand sbw-terminal-brand"><span>SBW RESEARCH TERMINAL</span><img src="/SBW%20Tree%20Logo.png" alt="" width={30} height={30}/></Link>}
         <SearchBox variant="pill" />
       </div>
       <nav className="mainnav" aria-label="Main">

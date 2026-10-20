@@ -842,3 +842,23 @@ html{scrollbar-color:#40536a #111820;scrollbar-width:thin}
 /* V95: moon 25% smaller, preserve centered alignment */
 .home-lunar-scene .home-photo-moon{width:118.5px;height:118.5px}
 @media(max-width:850px){.home-lunar-scene .home-photo-moon{width:86.25px;height:86.25px}}
+
+
+/* V101 terminal wordmark and compact watchlist dashboard */
+.sbw-terminal-brand{display:inline-flex;align-items:center;gap:12px;font-family:"Century Gothic","Trebuchet MS",Arial,sans-serif;font-size:17px;font-weight:300;letter-spacing:.24em;text-transform:uppercase;color:#eaf5ff;text-shadow:0 0 12px rgba(78,179,255,.2);white-space:nowrap}
+.sbw-terminal-brand img{object-fit:contain;filter:drop-shadow(0 0 4px rgba(83,175,243,.3))}
+.watch-dashboard{display:grid;grid-template-columns:minmax(210px,250px) minmax(0,1fr);gap:14px;align-items:start}
+.watch-dashboard .watch-list-panel{grid-column:1;grid-row:1}
+.watch-dashboard .watch-performance-panel{grid-column:2;grid-row:1}
+.watch-dashboard .watch-stocks-panel{grid-column:1/-1;grid-row:2}
+.watch-performance-body{display:grid;grid-template-columns:minmax(0,1fr) 205px;gap:12px;align-items:start}
+.watch-performance-rank{max-height:355px;overflow-y:auto;border:1px solid #293545;border-radius:6px}
+.watch-performance-rank table{width:100%;border-collapse:collapse;font-size:12px}
+.watch-performance-rank th,.watch-performance-rank td{padding:7px 8px;border-bottom:1px solid #273342;text-align:left}
+.watch-performance-rank th:last-child,.watch-performance-rank td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.watch-performance-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.watch-performance-controls input{background:#101a26;color:#eaf2ff;border:1px solid #3a5674;border-radius:5px;padding:8px 10px;min-width:135px}
+.watch-performance-controls button{background:#172b41;color:#b9dbff;border:1px solid #365a80;border-radius:5px;padding:8px 12px;cursor:pointer}
+.watch-performance-controls button:hover{background:#234464}
+@media(max-width:1100px){.watch-performance-body{grid-template-columns:minmax(0,1fr)}.watch-performance-rank{max-height:180px}}
+@media(max-width:800px){.watch-dashboard{grid-template-columns:1fr}.watch-dashboard .watch-list-panel,.watch-dashboard .watch-performance-panel,.watch-dashboard .watch-stocks-panel{grid-column:1;grid-row:auto}.sbw-terminal-brand{font-size:12px;letter-spacing:.13em}}

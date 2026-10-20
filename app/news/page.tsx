@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
-import quotes from "@/data/benz-bot-quotes.json";
+import quotes from "@/data/dailyquotes.json";
 type Watchlist={id:string;name:string;tickers:string[]};
 type Story={title:string;url:string;source:string;published:string;description:string};
 type CalendarEvent={time:string;name:string;actual:string;previous:string;consensus:string;impact:string;reference?:string};

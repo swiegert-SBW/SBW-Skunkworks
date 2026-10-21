@@ -54,13 +54,60 @@ async function nasdaq(from:string,to:string,symbols:string[]){
  }}));
  return {events:output,successful,failed,failedDates};
 }
+
+type EarningsRow={symbol:string;reportDate:string;fiscalDateEnding:string};
+function parseCsv(source:string):string[][]{
+ const rows:string[][]=[];let fields:string[]=[],value="",quoted=false;
+ for(let i=0;i<source.length;i++){const ch=source[i];if(ch==='"'){if(quoted&&source[i+1]==='"'){value+='"';i++}else quoted=!quoted}else if(ch===","&&!quoted){fields.push(value);value=""}else if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&source[i+1]==="\n")i++;fields.push(value);value="";if(fields.some(x=>x.trim()))rows.push(fields);fields=[]}else value+=ch}
+ if(value||fields.length){fields.push(value);rows.push(fields)}return rows
+}
+async function alphaVantage(from:string,to:string,symbols:string[]):Promise<{events:Found[];status:string}>{
+ const key=process.env.ALPHA_VANTAGE_API_KEY;
+ if(!key)return {events:[],status:"Alpha Vantage API key not configured"};
+ try{
+ const response=await fetch("https://www.alphavantage.co/query?"+new URLSearchParams({function:"EARNINGS_CALENDAR",horizon:"12month",apikey:key}),{next:{revalidate:43200},signal:AbortSignal.timeout(14000)});
+ if(!response.ok)return {events:[],status:"Alpha Vantage returned HTTP "+response.status};
+ const body=await response.text();
+ if(body.trimStart().startsWith("{"))return {events:[],status:"Alpha Vantage did not return earnings CSV (possible API quota or access restriction)"};
+ const rows=parseCsv(body);const headings=(rows.shift()||[]).map(x=>x.trim().toLowerCase().replace(/^\uFEFF/,""));
+ const symbolIndex=headings.indexOf("symbol"),dateIndex=headings.indexOf("reportdate");
+ if(symbolIndex<0||dateIndex<0)return {events:[],status:"Alpha Vantage earnings CSV has an unexpected schema"};
+ const wanted=new Map(symbols.map(s=>[s.replace(/-/g,".").toUpperCase(),s]));const events:Found[]=[];
+ for(const row of rows){const raw=(row[symbolIndex]||"").trim().toUpperCase(),ticker=wanted.get(raw),date=(row[dateIndex]||"").trim();
+ if(!ticker||!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<from||date>to)continue;
+ events.push({id:"alpha-"+ticker+"-"+date,ticker,type:"Earnings Release",title:ticker+" Earnings (Expected)",date,time:"",url:"https://www.alphavantage.co/",notes:"Alpha Vantage expected earnings date; check company IR to confirm",source:"verified"})}
+ return {events,status:"Alpha Vantage earnings dates (estimated unless confirmed)"};
+ }catch{return {events:[],status:"Alpha Vantage earnings request failed"}}
+}
+// Direct company IR sources are intentionally allowlisted. Never treat an unsourced headline as an IR event.
+const irPages:Record<string,string>={TSLA:"https://ir.tesla.com/"};
+async function officialIr(tickers:string[],from:string,to:string):Promise<Found[]>{
+ const selected=tickers.filter(t=>irPages[t]);const results=await Promise.all(selected.map(async ticker=>{
+ try{
+ const url=irPages[ticker],response=await fetch(url,{next:{revalidate:21600},signal:AbortSignal.timeout(8000)});
+ if(!response.ok)return [] as Found[];
+ const html=await response.text(),matches=[...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)],events:Found[]=[];
+ for(const match of matches){const row=match[1].replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;|&#160;/gi," ").replace(/\s+/g," ").trim();
+ const found=row.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+20\d{2}\b/i);
+ if(!found)continue;const ms=Date.parse(found[0]);if(!Number.isFinite(ms))continue;const date=new Date(ms).toISOString().slice(0,10);if(date<from||date>to)continue;
+ if(!/\b(Q[1-4]|earnings|quarter|webcast)\b/i.test(row))continue;
+ events.push({id:"ir-"+ticker+"-"+date,ticker,type:"Earnings Release",title:ticker+" Earnings (Company IR)",date,time:"",url,notes:"Direct company investor relations calendar · Company-published date",source:"verified"});
+ }
+ return events;
+ }catch{return [] as Found[]}
+ }));return results.flat()
+}
 export async function GET(req:NextRequest){
  const p=req.nextUrl.searchParams,from=p.get("from")||"",to=p.get("to")||"";
  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||to<from||Date.parse(to)-Date.parse(from)>94*86400000)return NextResponse.json({error:"Invalid date range"},{status:400});
  const symbols=[...new Set((p.get("tickers")||"").split(",").map(x=>x.trim().toUpperCase().replace(/\./g,"-")).filter(x=>/^[A-Z0-9^-]{1,12}$/.test(x)))].slice(0,70);
- const result=await nasdaq(from,to,symbols);
- const events=result.events.slice(0,200);
- const requestedDay=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
- const status=result.failedDates.includes(requestedDay)?"Nasdaq could not supply today\u2019s earnings schedule.":result.successful===0?"Nasdaq earnings data is unavailable for this period.":result.failed?"Nasdaq data could not be loaded for some dates.":"Nasdaq earnings calendar only.";
- return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:status+" Dates may be estimates; confirm using company IR.",failedDates:result.failedDates,nasdaqDaysLoaded:result.successful,nasdaqDaysFailed:result.failed},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
+ const [alpha,ir]=await Promise.all([alphaVantage(from,to,symbols),officialIr(symbols,from,to)]);
+ const primary=alpha.events.length>0?alpha.events:(await nasdaq(from,to,symbols)).events;
+ const irKeys=new Set(ir.map(e=>e.ticker+"|"+e.date));
+ const unique=new Map<string,Found>();
+ for(const e of primary)if(!irKeys.has(e.ticker+"|"+e.date))unique.set(e.ticker+"|"+e.date+"|"+e.type,e);
+ for(const e of ir)unique.set(e.ticker+"|"+e.date+"|"+e.type,e);
+ const events=[...unique.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.ticker.localeCompare(b.ticker)).slice(0,200);
+ const status=alpha.events.length?"Alpha Vantage + official IR": "Nasdaq fallback + official IR";
+ return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:status+". "+alpha.status+". Broader IR events depend on available company-published calendars.",sources:{alpha:alpha.events.length,officialIr:ir.length,fallback:!alpha.events.length}},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
 }

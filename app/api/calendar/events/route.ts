@@ -65,10 +65,10 @@ async function alphaVantage(from:string,to:string,symbols:string[]):Promise<{eve
  const key=process.env.ALPHA_VANTAGE_API_KEY;
  if(!key)return {events:[],status:"Alpha Vantage API key not configured"};
  try{
- const response=await fetch("https://www.alphavantage.co/query?"+new URLSearchParams({function:"EARNINGS_CALENDAR",horizon:"12month",apikey:key}),{next:{revalidate:43200},signal:AbortSignal.timeout(14000)});
+ const response=await fetch("https://www.alphavantage.co/query?"+new URLSearchParams({function:"EARNINGS_CALENDAR",horizon:"3month",apikey:key}),{next:{revalidate:43200},signal:AbortSignal.timeout(14000)});
  if(!response.ok)return {events:[],status:"Alpha Vantage returned HTTP "+response.status};
  const body=await response.text();
- if(body.trimStart().startsWith("{"))return {events:[],status:"Alpha Vantage did not return earnings CSV (possible API quota or access restriction)"};
+ if(body.trimStart().startsWith("{")){let reason="Unexpected JSON response";try{const data=JSON.parse(body) as Record<string,unknown>;reason=typeof data.Information==="string"?data.Information:typeof data.Note==="string"?data.Note:typeof data["Error Message"]==="string"?data["Error Message"]:reason}catch{}return {events:[],status:"Alpha Vantage: "+reason.slice(0,220)}}
  const rows=parseCsv(body);const headings=(rows.shift()||[]).map(x=>x.trim().toLowerCase().replace(/^\uFEFF/,""));
  const symbolIndex=headings.indexOf("symbol"),dateIndex=headings.indexOf("reportdate");
  if(symbolIndex<0||dateIndex<0)return {events:[],status:"Alpha Vantage earnings CSV has an unexpected schema"};
@@ -102,12 +102,15 @@ export async function GET(req:NextRequest){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||to<from||Date.parse(to)-Date.parse(from)>94*86400000)return NextResponse.json({error:"Invalid date range"},{status:400});
  const symbols=[...new Set((p.get("tickers")||"").split(",").map(x=>x.trim().toUpperCase().replace(/\./g,"-")).filter(x=>/^[A-Z0-9^-]{1,12}$/.test(x)))].slice(0,70);
  const [alpha,ir]=await Promise.all([alphaVantage(from,to,symbols),officialIr(symbols,from,to)]);
- const primary=alpha.events.length>0?alpha.events:(await nasdaq(from,to,symbols)).events;
+ const alphaTickers=new Set(alpha.events.map(e=>e.ticker));
+ const missing=symbols.filter(s=>!alphaTickers.has(s));
+ const secondary=missing.length?await nasdaq(from,to,missing):{events:[],successful:0,failed:0,failedDates:[] as string[]};
+ const primary=[...alpha.events,...secondary.events];
  const irKeys=new Set(ir.map(e=>e.ticker+"|"+e.date));
  const unique=new Map<string,Found>();
  for(const e of primary)if(!irKeys.has(e.ticker+"|"+e.date))unique.set(e.ticker+"|"+e.date+"|"+e.type,e);
  for(const e of ir)unique.set(e.ticker+"|"+e.date+"|"+e.type,e);
  const events=[...unique.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.ticker.localeCompare(b.ticker)).slice(0,200);
- const status=alpha.events.length?"Alpha Vantage + official IR": "Nasdaq fallback + official IR";
- return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:status+". "+alpha.status+". Broader IR events depend on available company-published calendars.",sources:{alpha:alpha.events.length,officialIr:ir.length,fallback:!alpha.events.length}},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
+ const status=alpha.events.length?"Alpha Vantage earnings + Nasdaq coverage for unmatched tickers":"Nasdaq fallback (Alpha Vantage returned no matching dates)";
+ return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:status+". "+alpha.status+". Broader IR events depend on available company-published calendars.",sources:{alpha:alpha.events.length,officialIr:ir.length,nasdaq:secondary.events.length,alphaStatus:alpha.status,missingTickers:missing,nasdaqDaysFailed:secondary.failed},keyConfigured:!!process.env.ALPHA_VANTAGE_API_KEY},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
 }

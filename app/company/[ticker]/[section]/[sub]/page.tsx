@@ -11,11 +11,16 @@ import CompanyNews from "@/components/CompanyNews";
 import ConsensusEstimates from "@/components/ConsensusEstimates";
 import OwnershipOverview from "@/components/OwnershipOverview";
 import ShortInterest from "@/components/ShortInterest";
+import BusinessQuantPanel from "@/components/BusinessQuantPanel";
 export default async function SubPage({params,searchParams}:{params:Promise<{ticker:string;section:string;sub:string}>;searchParams:Promise<{period?:string;range?:string}>}){
  const [{ticker,section:sectionId,sub},query]=await Promise.all([params,searchParams]);
  const section=NAV.find(s=>s.id===sectionId),item=section?.items.find(i=>i.id===sub);
  if(!section||!item)notFound();
  const symbol=ticker.toUpperCase();
+ if(section.id==="financials"&&item.id==="dividends")return <BusinessQuantPanel ticker={symbol} kind="dividends"/>;
+ if(section.id==="financials"&&item.id==="segments")return <BusinessQuantPanel ticker={symbol} kind="segments"/>;
+ if(section.id==="overviews"&&item.id==="comps")return <BusinessQuantPanel ticker={symbol} kind="peers"/>;
+ if(section.id==="news"&&item.id==="events")return <BusinessQuantPanel ticker={symbol} kind="events"/>;
  if(section.id==="ownership"&&item.id==="short-interest")return <ShortInterest ticker={symbol}/>;
  if(section.id==="ownership")return <OwnershipOverview ticker={symbol}/>;
  if(section.id==="estimates"&&item.id==="consensus")return <ConsensusEstimates ticker={symbol}/>;

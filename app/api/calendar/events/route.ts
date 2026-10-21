@@ -35,11 +35,30 @@ async function query(ticker:string,from:string,to:string):Promise<Found[]>{
  return result;
  }catch{return []}
 }
+type NasdaqRow={symbol?:unknown;time?:unknown};
+async function nasdaq(from:string,to:string,symbols:string[]):Promise<Found[]>{
+ const wanted=new Map(symbols.map(s=>[s.replace(/-/g,".").toUpperCase(),s]));
+ const days:string[]=[];for(let n=Date.parse(from+"T00:00:00Z");n<=Date.parse(to+"T00:00:00Z");n+=86400000){const d=new Date(n);if(d.getUTCDay()>0&&d.getUTCDay()<6)days.push(d.toISOString().slice(0,10))}
+ let index=0;const output:Found[]=[];
+ await Promise.all(Array.from({length:Math.min(8,days.length)},async()=>{while(index<days.length){
+ const date=days[index++];try{
+ const response=await fetch("https://api.nasdaq.com/api/calendar/earnings?"+new URLSearchParams({date}),{headers:{"User-Agent":"Mozilla/5.0","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com"},next:{revalidate:43200},signal:AbortSignal.timeout(7000)});
+ if(!response.ok)continue;const json=await response.json() as {data?:{rows?:NasdaqRow[]}};
+ for(const row of json?.data?.rows||[]){const symbol=typeof row.symbol==="string"?row.symbol.trim().toUpperCase():"";const ticker=wanted.get(symbol);if(!ticker)continue;
+ const period=typeof row.time==="string"?row.time:"";const session=/after/i.test(period)?"After market close":/before|pre.market/i.test(period)?"Before market open":"Timing unconfirmed";
+ output.push({id:"nasdaq-"+ticker+"-"+date,ticker,type:"Earnings Release",title:ticker+" Earnings Release",date,time:"",url:"https://www.nasdaq.com/market-activity/earnings",notes:"Nasdaq earnings calendar · "+session+" · Date may be estimated; confirm with company IR",source:"verified"});
+ }
+ }catch{}
+ }}));
+ return output;
+}
 export async function GET(req:NextRequest){
  const p=req.nextUrl.searchParams,from=p.get("from")||"",to=p.get("to")||"";
  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||to<from||Date.parse(to)-Date.parse(from)>94*86400000)return NextResponse.json({error:"Invalid date range"},{status:400});
  const symbols=[...new Set((p.get("tickers")||"").split(",").map(x=>x.trim().toUpperCase().replace(/\./g,"-")).filter(x=>/^[A-Z0-9^-]{1,12}$/.test(x)))].slice(0,70);
- const results:Found[]=[];for(let i=0;i<symbols.length;i+=10){const group=await Promise.all(symbols.slice(i,i+10).map(t=>query(t,from,to)));results.push(...group.flat())}
+ const [nasdaqEvents,announcements]=await Promise.all([nasdaq(from,to,symbols),(async()=>{const items:Found[]=[];for(let i=0;i<symbols.length;i+=10){const group=await Promise.all(symbols.slice(i,i+10).map(t=>query(t,from,to)));items.push(...group.flat())}return items})()]);
+ const known=new Set(announcements.filter(e=>e.type==="Earnings Call"||e.type==="Earnings Release").map(e=>e.ticker+"|"+e.date));
+ const results=[...announcements,...nasdaqEvents.filter(e=>!known.has(e.ticker+"|"+e.date))];
  const seen=new Set<string>();const events=results.filter(e=>{const k=e.ticker+"|"+e.date+"|"+e.type+"|"+e.title.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,55);if(seen.has(k))return false;seen.add(k);return true}).slice(0,200);
- return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:"Only explicitly dated public announcements found in the last 30 days. Coverage varies by company."},{headers:{"Cache-Control":"public, s-maxage=21600, stale-while-revalidate=86400"}});
+ return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:"Nasdaq earnings-calendar dates plus public announcements. Nasdaq dates may be estimates; confirm using company IR."},{headers:{"Cache-Control":"public, s-maxage=21600, stale-while-revalidate=86400"}});
 }

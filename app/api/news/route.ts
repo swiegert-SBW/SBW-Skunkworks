@@ -28,12 +28,12 @@ export async function GET(req:NextRequest){
  const names=directory as Record<string,string>;
  const shortName=(t:string)=>String(names[t]||names[t.replace(/-/g,".")]||"").replace(/\b(Inc\.?|Corporation|Corp\.?|Ltd\.?|Limited|PLC|Co\.?|Class [A-Z]|Common Stock|Holdings?)\b/gi," ").replace(/[^a-zA-Z0-9 ]/g," ").replace(/\s+/g," ").trim();
  const searchTerms=symbols.map(t=>({ticker:t,name:shortName(t)}));
- const batches:typeof searchTerms[]=[];for(let i=0;i<searchTerms.length;i+=8)batches.push(searchTerms.slice(i,i+8));
+ const batches:typeof searchTerms[]=[];for(let i=0;i<searchTerms.length;i+=3)batches.push(searchTerms.slice(i,i+3));
  const [market,...companyGroups]=await Promise.all([
   feed("(stock market OR Wall Street OR Federal Reserve OR inflation OR economy) when:1d",24),
   ...batches.map(async batch=>{
    const terms=batch.flatMap(s=>s.name.length>=5?['"'+s.name+'"','"'+s.ticker.replace(/-/g,".")+'"']:['"'+s.ticker.replace(/-/g,".")+'"']);
-   return await feed("("+terms.join(" OR ")+") when:5d",40);
+   return (await feed("("+terms.join(" OR ")+") "+publisherQuery+" when:5d",60)).filter(story=>ALLOWED.some(rx=>rx.test(story.source)));
   })
  ]);
  const escaped=(s:string)=>s.replace(/[^a-zA-Z0-9 ]/g,"\\$&");
@@ -47,7 +47,7 @@ export async function GET(req:NextRequest){
   return 0;
  };
  const cutoff=Date.now()-5*24*60*60*1000;
- const companies=dedupe(companyGroups.flat()).filter(story=>{const published=Date.parse(story.published);return Number.isFinite(published)&&published>=cutoff&&published<=Date.now()+60000}).map(story=>({story,score:Math.max(0,...searchTerms.map(s=>matches(story.title,s.ticker,s.name)))})).sort((a,b)=>(Date.parse(b.story.published)||0)-(Date.parse(a.story.published)||0)||b.score-a.score).slice(0,100).map(x=>x.story);
+ const companies=dedupe(companyGroups.flat()).filter(story=>{const published=Date.parse(story.published);return Number.isFinite(published)&&published>=cutoff&&published<=Date.now()+60000}).map(story=>({story,score:Math.max(0,...searchTerms.map(s=>matches(story.title,s.ticker,s.name)))})).filter(item=>item.score>0).sort((a,b)=>(Date.parse(b.story.published)||0)-(Date.parse(a.story.published)||0)||b.score-a.score).slice(0,100).map(x=>x.story);
  const now=new Date();
  const dateKey=(d:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
  const startDay=dateKey(now),endDay=dateKey(new Date(now.getTime()+7*86400000));

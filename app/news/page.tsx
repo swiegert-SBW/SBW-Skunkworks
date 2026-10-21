@@ -16,7 +16,7 @@ export default function NewsPage(){
  const tickers=(current?.tickers||[]).join(",");
  useEffect(()=>{let alive=true;setLoading(!data);setError("");const controller=new AbortController();
  try{const saved=sessionStorage.getItem("sbw-news-cache:"+tickers);if(saved){const item=JSON.parse(saved);if(Date.now()-item.time<600000){setData(item.data);setLoading(false)}}}catch{}
- fetch("/api/news?"+new URLSearchParams({tickers}),{signal:controller.signal,cache:"default"}).then(async r=>{if(!r.ok)throw Error("News sources are temporarily unavailable");return r.json()}).then(d=>{if(alive){setData(d);try{sessionStorage.setItem("sbw-news-cache:"+tickers,JSON.stringify({time:Date.now(),data:d}))}catch{}}}).catch(e=>{if(alive)setError(e.message||"Unable to load news")}).finally(()=>{if(alive)setLoading(false)});
+ fetch("/api/news?"+new URLSearchParams({tickers,refresh:String(refresh)}),{signal:controller.signal,cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("News sources are temporarily unavailable");return r.json()}).then(d=>{if(alive){setData(d);try{sessionStorage.setItem("sbw-news-cache:"+tickers,JSON.stringify({time:Date.now(),data:d}))}catch{}}}).catch(e=>{if(alive)setError(e.message||"Unable to load news")}).finally(()=>{if(alive)setLoading(false)});
  return()=>{alive=false;controller.abort()};},[tickers,refresh]);
  const change=(id:string)=>{setSelected(id);localStorage.setItem(SELECTED,id);window.dispatchEvent(new Event("sbw-watchlists-updated"))};
  const toggleSource=(name:string)=>setSources(prev=>{const next=prev.includes(name)?prev.filter(s=>s!==name):[...prev,name];localStorage.setItem(SOURCE_KEY,JSON.stringify(next));return next});

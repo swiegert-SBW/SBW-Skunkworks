@@ -39,20 +39,20 @@ type NasdaqRow={symbol?:unknown;time?:unknown};
 async function nasdaq(from:string,to:string,symbols:string[]){
  const wanted=new Map(symbols.map(s=>[s.replace(/-/g,".").toUpperCase(),s]));
  const days:string[]=[];for(let n=Date.parse(from+"T00:00:00Z");n<=Date.parse(to+"T00:00:00Z");n+=86400000){const d=new Date(n);if(d.getUTCDay()>0&&d.getUTCDay()<6)days.push(d.toISOString().slice(0,10))}
- let index=0,successful=0,failed=0;const output:Found[]=[];
- await Promise.all(Array.from({length:Math.min(6,days.length)},async()=>{while(index<days.length){
+ let index=0,successful=0,failed=0;const failedDates:string[]=[];const output:Found[]=[];
+ await Promise.all(Array.from({length:Math.min(12,days.length)},async()=>{while(index<days.length){
  const date=days[index++];try{
- const response=await fetch("https://api.nasdaq.com/api/calendar/earnings?"+new URLSearchParams({date,limit:"5000"}),{headers:{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com","Referer":"https://www.nasdaq.com/"},next:{revalidate:3600},signal:AbortSignal.timeout(12000)});
- if(!response.ok){failed++;continue}
+ const response=await fetch("https://api.nasdaq.com/api/calendar/earnings?"+new URLSearchParams({date}),{headers:{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com","Referer":"https://www.nasdaq.com/"},next:{revalidate:3600},signal:AbortSignal.timeout(6500)});
+ if(!response.ok){failed++;failedDates.push(date);continue}
  const json=await response.json() as {data?:{rows?:NasdaqRow[]}};
- if(!Array.isArray(json?.data?.rows)){failed++;continue}successful++;
+ if(!Array.isArray(json?.data?.rows)){failed++;failedDates.push(date);continue}successful++;
  for(const row of json.data.rows){const symbol=typeof row.symbol==="string"?row.symbol.trim().toUpperCase().replace(/-/g,"."):"";const ticker=wanted.get(symbol);if(!ticker)continue;
  const period=typeof row.time==="string"?row.time:"";const session=/after|amc/i.test(period)?"After market close":/before|pre.market|bmo/i.test(period)?"Before market open":"Timing unconfirmed";
  output.push({id:"nasdaq-"+ticker+"-"+date,ticker,type:"Earnings Release",title:ticker+" Earnings Release",date,time:"",url:"https://www.nasdaq.com/market-activity/earnings",notes:"Nasdaq earnings calendar · "+session+" · Date may be estimated; confirm with company IR",source:"verified"});
  }
- }catch{failed++}
+ }catch{failed++;failedDates.push(date)}
  }}));
- return {events:output,successful,failed};
+ return {events:output,successful,failed,failedDates};
 }
 export async function GET(req:NextRequest){
  const p=req.nextUrl.searchParams,from=p.get("from")||"",to=p.get("to")||"";
@@ -60,5 +60,7 @@ export async function GET(req:NextRequest){
  const symbols=[...new Set((p.get("tickers")||"").split(",").map(x=>x.trim().toUpperCase().replace(/\./g,"-")).filter(x=>/^[A-Z0-9^-]{1,12}$/.test(x)))].slice(0,70);
  const result=await nasdaq(from,to,symbols);
  const events=result.events.slice(0,200);
- return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:result.successful===0?"Nasdaq earnings data is currently unavailable; no alternative publisher events are shown.":result.failed?"Nasdaq earnings calendar · Some dates could not be loaded; use Refresh to retry.":"Nasdaq earnings calendar only. Dates may be estimates; confirm using company IR.",nasdaqDaysLoaded:result.successful,nasdaqDaysFailed:result.failed},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
+ const requestedDay=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+ const status=result.failedDates.includes(requestedDay)?"Nasdaq could not supply today\u2019s earnings schedule.":result.successful===0?"Nasdaq earnings data is unavailable for this period.":result.failed?"Nasdaq data could not be loaded for some dates.":"Nasdaq earnings calendar only.";
+ return NextResponse.json({events,checked:symbols.length,updatedAt:new Date().toISOString(),note:status+" Dates may be estimates; confirm using company IR.",failedDates:result.failedDates,nasdaqDaysLoaded:result.successful,nasdaqDaysFailed:result.failed},{headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=1800"}});
 }

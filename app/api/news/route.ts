@@ -10,7 +10,7 @@ const publisherQuery="(site:cnbc.com OR site:barrons.com OR site:wsj.com OR site
 async function feed(query:string,limit:number):Promise<Story[]>{
  const url="https://news.google.com/rss/search?"+new URLSearchParams({q:query,hl:"en-US",gl:"US",ceid:"US:en"});
  try{
-  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0"},next:{revalidate:600},signal:AbortSignal.timeout(2800)});
+  const r=await fetch(url,{headers:{"User-Agent":"Mozilla/5.0"},next:{revalidate:600},signal:AbortSignal.timeout(8000)});
   if(!r.ok)return [];
   const xml=await r.text();
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0,limit*3).map(m=>{
@@ -33,7 +33,7 @@ export async function GET(req:NextRequest){
   feed("(stock market OR Wall Street OR Federal Reserve OR inflation OR economy) when:1d",24),
   ...batches.map(async batch=>{
    const terms=batch.flatMap(s=>s.name.length>=5?['"'+s.name+'"','"'+s.ticker.replace(/-/g,".")+'"']:['"'+s.ticker.replace(/-/g,".")+'"']);
-   return (await feed("("+terms.join(" OR ")+") when:5d",40)).filter(s=>ALLOWED.some(rx=>rx.test(s.source)));
+   return await feed("("+terms.join(" OR ")+") when:5d",40);
   })
  ]);
  const escaped=(s:string)=>s.replace(/[^a-zA-Z0-9 ]/g,"\\$&");
@@ -47,7 +47,7 @@ export async function GET(req:NextRequest){
   return 0;
  };
  const cutoff=Date.now()-5*24*60*60*1000;
- const companies=dedupe(companyGroups.flat()).filter(story=>{const published=Date.parse(story.published);return Number.isFinite(published)&&published>=cutoff&&published<=Date.now()+60000}).map(story=>({story,score:Math.max(0,...searchTerms.map(s=>matches(story.title,s.ticker,s.name)))})).filter(x=>x.score>0).sort((a,b)=>(Date.parse(b.story.published)||0)-(Date.parse(a.story.published)||0)||b.score-a.score).slice(0,100).map(x=>x.story);
+ const companies=dedupe(companyGroups.flat()).filter(story=>{const published=Date.parse(story.published);return Number.isFinite(published)&&published>=cutoff&&published<=Date.now()+60000}).map(story=>({story,score:Math.max(0,...searchTerms.map(s=>matches(story.title,s.ticker,s.name)))})).sort((a,b)=>(Date.parse(b.story.published)||0)-(Date.parse(a.story.published)||0)||b.score-a.score).slice(0,100).map(x=>x.story);
  const now=new Date();
  const dateKey=(d:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
  const startDay=dateKey(now),endDay=dateKey(new Date(now.getTime()+7*86400000));

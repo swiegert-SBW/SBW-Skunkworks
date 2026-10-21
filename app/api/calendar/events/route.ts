@@ -40,9 +40,9 @@ async function nasdaq(from:string,to:string,symbols:string[]){
  const wanted=new Map(symbols.map(s=>[s.replace(/-/g,".").toUpperCase(),s]));
  const days:string[]=[];for(let n=Date.parse(from+"T00:00:00Z");n<=Date.parse(to+"T00:00:00Z");n+=86400000){const d=new Date(n);if(d.getUTCDay()>0&&d.getUTCDay()<6)days.push(d.toISOString().slice(0,10))}
  let index=0,successful=0,failed=0;const failedDates:string[]=[];const output:Found[]=[];
- await Promise.all(Array.from({length:Math.min(6,days.length)},async()=>{while(index<days.length){
+ await Promise.all(Array.from({length:Math.min(12,days.length)},async()=>{while(index<days.length){
  const date=days[index++];try{
- const response=await fetch("https://api.nasdaq.com/api/calendar/earnings?"+new URLSearchParams({date}),{headers:{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com","Referer":"https://www.nasdaq.com/"},next:{revalidate:3600},signal:AbortSignal.timeout(12000)});
+ const response=await fetch("https://api.nasdaq.com/api/calendar/earnings?"+new URLSearchParams({date}),{headers:{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","Accept":"application/json, text/plain, */*","Origin":"https://www.nasdaq.com","Referer":"https://www.nasdaq.com/"},next:{revalidate:3600},signal:AbortSignal.timeout(6500)});
  if(!response.ok){failed++;failedDates.push(date);continue}
  const json=await response.json() as {data?:{rows?:NasdaqRow[]}};
  if(!Array.isArray(json?.data?.rows)){failed++;failedDates.push(date);continue}successful++;

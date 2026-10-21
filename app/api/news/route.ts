@@ -33,7 +33,7 @@ export async function GET(req:NextRequest){
   feed("(stock market OR Wall Street OR Federal Reserve OR inflation OR economy) when:1d",24),
   ...batches.map(async batch=>{
    const terms=batch.flatMap(s=>s.name.length>=5?['"'+s.name+'"','"'+s.ticker.replace(/-/g,".")+'"']:['"'+s.ticker.replace(/-/g,".")+'"']);
-   return (await feed("("+terms.join(" OR ")+") "+publisherQuery+" when:5d",60)).filter(story=>ALLOWED.some(rx=>rx.test(story.source)));
+   return (await feed("("+terms.join(" OR ")+") when:5d",75)).filter(story=>ALLOWED.some(rx=>rx.test(story.source)));
   })
  ]);
  const escaped=(s:string)=>s.replace(/[^a-zA-Z0-9 ]/g,"\\$&");
@@ -41,6 +41,8 @@ export async function GET(req:NextRequest){
   const exact=(term:string,flags:string)=>term.length>=2&&new RegExp("(^|[^A-Za-z0-9])"+escaped(term)+"(?=$|[^A-Za-z0-9])",flags).test(title);
   if(name.length>=5&&exact(name,"i"))return 3;
   const core=name.split(" ").filter(w=>w.length>=5).slice(0,2).join(" ");
+  const first=name.split(" ").find(w=>w.length>=5);
+  if(first&&exact(first,"i")&&!/^(global|international|american|united|general|national|financial|technology|technologies|services|systems|group|capital|energy|medical|health|industrial)$/i.test(first))return 2;
   if(core.length>=5&&exact(core,"i"))return 2;
   // Tickers must be uppercase, standalone tokens, not parts of other words.
   if(ticker.length>=3&&(exact(ticker.replace(/-/g,"."),"")||exact(ticker,"")))return 1;
